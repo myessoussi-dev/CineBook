@@ -1,19 +1,21 @@
 package com.youssef.cinebook.Entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class Category {
-    private Integer id;
+    @Id
+    private Long id;
     private String name;
 
     public Category(){}
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

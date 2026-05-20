@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VideoApi {
-    private int id;
     private List<VideoTeaser> results;
 
-    public int getId() {
-        return id;
+    public VideoApi() {
     }
-
-    public void setId(int id) {
-        this.id = id;
+    @Override
+    public String toString() {
+        return "VideoApi{" +
+                "results=" + results +
+                '}';
     }
 
     public List<VideoTeaser> getResults() {

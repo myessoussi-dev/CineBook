@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MovieResponse {
+public class NowPlayingMovie {
 
-    private Map<String,Object> dates;
-    private List<MovieApi> results;
-    private int total_results;
+    private Map<String, Object> dates;
+    private List<MovieIdDTO> results;
 
     public Map<String, Object> getDates() {
         return dates;
@@ -19,20 +18,14 @@ public class MovieResponse {
         this.dates = dates;
     }
 
-    public List<MovieApi> getResults() {
+    public List<MovieIdDTO> getResults() {
         return results;
     }
 
-    public void setResults(List<MovieApi> results) {
+    public void setResults(List<MovieIdDTO> results) {
         this.results = results;
     }
 
-
-    public int getTotal_results() {
-        return total_results;
-    }
-
-    public void setTotal_results(int total_results) {
-        this.total_results = total_results;
+    public NowPlayingMovie() {
     }
 }

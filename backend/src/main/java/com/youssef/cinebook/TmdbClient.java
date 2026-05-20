@@ -1,8 +1,5 @@
 package com.youssef.cinebook;
 
-import Model.Category;
-
-import com.youssef.cinebook.ApiClient;
 import com.youssef.cinebook.DTO.*;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
@@ -23,11 +20,11 @@ public class TmdbClient {
         this.apiClient = apiClient;
     }
 
-    public List<MovieApi> getNowPlaying(int page) throws IOException {
+    public List<Long> getNowPlaying(int page) throws IOException {
         String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=" + API_KEY +
                 "&page="+page;
-        MovieResponse movieResponse = apiClient.fetchMoviesJson(url, MovieResponse.class);
-        return movieResponse.getResults();
+        NowPlayingMovie movieResponse = apiClient.fetchMoviesJson(url, NowPlayingMovie.class);
+        return movieResponse.getResults().stream().map(MovieIdDTO::getId).toList();
     }
 
     public List<VideoTeaser> getVideos(int movieId) throws IOException {
@@ -35,9 +32,13 @@ public class TmdbClient {
         VideoApi videoApi = apiClient.fetchMoviesJson(url, VideoApi.class);
         return videoApi.getResults();
     }
-    public List<Category> getAllCategories() throws IOException{
+    public List<CategoryApi> getAllCategories() throws IOException{
         String url="https://api.themoviedb.org/3/genre/movie/list?api_key="+API_KEY;
-        CategoryApi categoryApi=apiClient.fetchMoviesJson(url,CategoryApi.class);
-        return categoryApi.getGenres();
+        AllCategories allCategories=apiClient.fetchMoviesJson(url,AllCategories.class);
+        return allCategories.getGenres();
+    }
+    public MovieDetailsApi getMovieDetails(Long movieId){
+        String url="https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + API_KEY+"&append_to_response=videos";
+        return apiClient.fetchMoviesJson(url,MovieDetailsApi.class);
     }
 }

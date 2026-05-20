@@ -7,7 +7,7 @@ import java.util.List;
 @Entity
 public class Movie {
     @Id
-    private Integer id;
+    private Long id;
     private String title;
     private String overview;
     private String posterPath;
@@ -40,11 +40,11 @@ public class Movie {
                 "=======================================\n";
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

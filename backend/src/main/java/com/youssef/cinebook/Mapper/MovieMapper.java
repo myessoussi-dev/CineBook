@@ -1,16 +1,16 @@
 package com.youssef.cinebook.Mapper;
 
-import DTO.MovieApi;
-import Model.Movie;
+
+import com.youssef.cinebook.DTO.MovieDetailsApi;
+import com.youssef.cinebook.Entity.Movie;
 
 public class MovieMapper {
 
-    public static Movie mapToMovie(MovieApi movieApi){
+    public static Movie mapToMovie(MovieDetailsApi movieApi){
         Movie movie=new Movie();
         movie.setId(movieApi.getId());
         movie.setOverview(movieApi.getOverview());
         movie.setBackdropPath(movieApi.getBackdropPath());
-        movie.setGenreIds(movieApi.getGenreIds());
         movie.setTitle(movieApi.getTitle());
         movie.setPosterPath(movieApi.getPosterPath());
         movie.setReleaseDate(movieApi.getReleaseDate());
