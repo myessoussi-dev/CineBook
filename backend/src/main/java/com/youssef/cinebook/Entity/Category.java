@@ -1,5 +1,6 @@
 package com.youssef.cinebook.Entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -7,6 +8,7 @@ import jakarta.persistence.Id;
 public class Category {
     @Id
     private Long id;
+    @Column(nullable = false)
     private String name;
 
     public Category(){}

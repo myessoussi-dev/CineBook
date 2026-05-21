@@ -2,18 +2,67 @@ package com.youssef.cinebook.Entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 public class Movie {
     @Id
     private Long id;
+
+    @Column(nullable = false)
     private String title;
+
+    @Column(length = 2000)
     private String overview;
+
+    @Column(length = 500)
     private String posterPath;
-    private String releaseDate;
-    private String VideoKey;
+
+    private LocalDate releaseDate;
+
+    @Column(length = 100)
+    private String videoKey;
+
+    @Column(length = 500)
     private String backdropPath;
+
+    private Integer runtime;
+    private Double voteAverage;
+    private Integer voteCount;
+    private Double popularity;
+
+    public Integer getRuntime() {
+        return runtime;
+    }
+
+    public void setRuntime(Integer runtime) {
+        this.runtime = runtime;
+    }
+
+    public Double getVoteAverage() {
+        return voteAverage;
+    }
+
+    public void setVoteAverage(Double voteAverage) {
+        this.voteAverage = voteAverage;
+    }
+
+    public Integer getVoteCount() {
+        return voteCount;
+    }
+
+    public void setVoteCount(Integer voteCount) {
+        this.voteCount = voteCount;
+    }
+
+    public Double getPopularity() {
+        return popularity;
+    }
+
+    public void setPopularity(Double popularity) {
+        this.popularity = popularity;
+    }
 
     @ManyToMany
     // Remarque : joinColumns est un tableau car il peut contenir plusieurs colonnes
@@ -36,7 +85,7 @@ public class Movie {
                 "Overview     : " + overview + "\n" +
                 "Poster Path  : " + posterPath + "\n" +
                 "Backdrop Path: " + backdropPath + "\n" +
-                "Video Key    : " + VideoKey + "\n" +
+                "Video Key    : " + videoKey + "\n" +
                 "=======================================\n";
     }
 
@@ -72,20 +121,20 @@ public class Movie {
         this.posterPath = posterPath;
     }
 
-    public String getReleaseDate() {
+    public LocalDate getReleaseDate() {
         return releaseDate;
     }
 
-    public void setReleaseDate(String releaseDate) {
+    public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
     }
 
     public String getVideoKey() {
-        return VideoKey;
+        return videoKey;
     }
 
     public void setVideoKey(String videoKey) {
-        VideoKey = videoKey;
+        this.videoKey = videoKey;
     }
 
     public String getBackdropPath() {
