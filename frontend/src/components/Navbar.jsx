@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -12,8 +11,6 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  const isDetail = location.pathname.startsWith('/api/movies/')
 
   return (
     <nav style={{
@@ -39,40 +36,30 @@ export default function Navbar() {
         style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
       >
         <div style={{
-          width: 36,
-          height: 36,
+          width: 36, height: 36,
           borderRadius: '10px',
           background: 'var(--accent)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '18px',
-          fontWeight: 700,
-          color: '#000',
-          fontFamily: 'var(--font-display)',
-          letterSpacing: '1px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '18px', fontWeight: 700, color: '#000',
+          fontFamily: 'var(--font-display)', letterSpacing: '1px',
         }}>C</div>
         <span style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '24px',
-          letterSpacing: '3px',
+          fontSize: '24px', letterSpacing: '3px',
           color: 'var(--text-primary)',
         }}>CINÉBOOK</span>
       </div>
 
-      {/* Nav Links — desktop */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '36px' }} className="nav-links">
+      {/* Nav Links */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '36px' }}>
         {['Films', 'Séances', 'Offres', 'À propos'].map(item => (
           <span
             key={item}
             style={{
-              fontSize: '13px',
-              fontWeight: 500,
+              fontSize: '13px', fontWeight: 500,
               color: 'var(--text-muted)',
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'color 0.2s',
+              letterSpacing: '1px', textTransform: 'uppercase',
+              cursor: 'pointer', transition: 'color 0.2s',
             }}
             onMouseEnter={e => e.target.style.color = 'var(--accent)'}
             onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
@@ -92,9 +79,8 @@ export default function Navbar() {
           color: 'var(--text-muted)',
           fontSize: '13px',
           transition: 'all 0.2s',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
+          display: 'flex', alignItems: 'center', gap: '6px',
+          cursor: 'pointer',
         }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
@@ -104,17 +90,20 @@ export default function Navbar() {
           </svg>
           Rechercher
         </button>
-        <button style={{
-          background: 'var(--accent)',
-          border: 'none',
-          borderRadius: '8px',
-          padding: '9px 18px',
-          color: '#000',
-          fontSize: '13px',
-          fontWeight: 600,
-          letterSpacing: '0.5px',
-          transition: 'all 0.2s',
-        }}
+
+        <button
+          onClick={() => navigate('/login')}
+          style={{
+            background: 'var(--accent)',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '9px 18px',
+            color: '#000',
+            fontSize: '13px', fontWeight: 600,
+            letterSpacing: '0.5px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
           onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >

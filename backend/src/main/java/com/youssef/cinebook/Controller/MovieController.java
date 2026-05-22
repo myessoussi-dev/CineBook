@@ -1,6 +1,8 @@
 package com.youssef.cinebook.Controller;
 
+import com.youssef.cinebook.DTO.SessionDTO;
 import com.youssef.cinebook.Entity.Movie;
+import com.youssef.cinebook.Entity.Session;
 import com.youssef.cinebook.Service.MovieService;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,4 +25,9 @@ public class MovieController {
     public Movie getMovieDetails(@PathVariable Long id){
         return movieService.getMovieDetails(id);
     }
+    @GetMapping("/{id}/sessions")
+    public List<SessionDTO> getMovieSessions(@PathVariable Long id){
+        return movieService.getMovieSessions(id);
+    }
+
 }

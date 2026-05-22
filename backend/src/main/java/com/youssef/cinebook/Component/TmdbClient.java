@@ -1,10 +1,9 @@
-package com.youssef.cinebook;
+package com.youssef.cinebook.Component;
 
 import com.youssef.cinebook.DTO.*;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
+
 import java.util.List;
 
 import static com.youssef.cinebook.EnvConfig.API_KEY;
@@ -12,19 +11,17 @@ import static com.youssef.cinebook.EnvConfig.API_KEY;
 @Component
 public class TmdbClient {
 
-    private final ObjectMapper objectMapper;
     private final ApiClient apiClient;
 
-    public TmdbClient(ObjectMapper objectMapper, ApiClient apiClient) {
-        this.objectMapper = objectMapper;
+    public TmdbClient(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
 
     public List<Long> getNowPlaying(int page){
         String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=" + API_KEY +
                 "&page="+page;
-        NowPlayingMovie movieResponse = apiClient.fetchMoviesJson(url, NowPlayingMovie.class);
-        return movieResponse.getResults().stream().map(MovieIdDTO::getId).toList();
+        MovieApi movieApi = apiClient.fetchMoviesJson(url, MovieApi.class);
+        return movieApi.getResults().stream().map(MovieIdDTO::getId).toList();
     }
 
     public List<VideoTeaser> getVideos(int movieId) {
@@ -40,5 +37,11 @@ public class TmdbClient {
     public MovieDetailsApi getMovieDetails(Long movieId){
         String url="https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + API_KEY+"&append_to_response=videos";
         return apiClient.fetchMoviesJson(url,MovieDetailsApi.class);
+    }
+    public List<Long> getPopularMovies(int page){
+        String url = "https://api.themoviedb.org/3/movie/popular?api_key=" + API_KEY +
+                "&page="+page;
+        MovieApi movieApi=apiClient.fetchMoviesJson(url,MovieApi.class);
+        return movieApi.getResults().stream().map(MovieIdDTO::getId).toList();
     }
 }

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NowPlayingMovie {
+public class MovieApi {
 
     private Map<String, Object> dates;
     private List<MovieIdDTO> results;
@@ -26,6 +26,6 @@ public class NowPlayingMovie {
         this.results = results;
     }
 
-    public NowPlayingMovie() {
+    public MovieApi() {
     }
 }

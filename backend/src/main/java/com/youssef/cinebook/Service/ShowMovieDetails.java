@@ -1,8 +1,9 @@
 package com.youssef.cinebook.Service;
 
+import com.youssef.cinebook.Component.TmdbClient;
 import com.youssef.cinebook.DTO.MovieDetailsApi;
 import com.youssef.cinebook.DTO.VideoTeaser;
-import com.youssef.cinebook.TmdbClient;
+
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

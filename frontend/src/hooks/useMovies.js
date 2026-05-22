@@ -11,14 +11,18 @@ export function useMovies() {
     setLoading(true)
     fetch(`${BASE_URL}/api/movies`)
       .then(res => {
-        if (!res.ok) throw new Error('Erreur réseau')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
       .then(data => {
-        setMovies(data)
+        console.log('✅ Films reçus:', data)
+        // Si le backend renvoie { content: [...] } (pagination Spring)
+        const list = Array.isArray(data) ? data : data.content ?? data.data ?? []
+        setMovies(list)
         setLoading(false)
       })
       .catch(err => {
+        console.error('❌ Erreur fetch films:', err)
         setError(err.message)
         setLoading(false)
       })
@@ -52,4 +56,30 @@ export function useMovieById(id) {
   }, [id])
 
   return { movie, loading, error }
+}
+
+export function useMovieSessions(movieId) {
+  const [sessions, setSessions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!movieId) return
+    setLoading(true)
+    fetch(`${BASE_URL}/api/movies/${movieId}/sessions`)
+      .then(res => {
+        if (!res.ok) throw new Error('Sessions introuvables')
+        return res.json()
+      })
+      .then(data => {
+        setSessions(Array.isArray(data) ? data : data.content ?? [])
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err.message)
+        setLoading(false)
+      })
+  }, [movieId])
+
+  return { sessions, loading, error }
 }

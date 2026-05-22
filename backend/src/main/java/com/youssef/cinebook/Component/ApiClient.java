@@ -1,4 +1,4 @@
-package com.youssef.cinebook;
+package com.youssef.cinebook.Component;
 
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;

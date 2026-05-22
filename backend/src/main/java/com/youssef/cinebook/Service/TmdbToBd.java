@@ -1,5 +1,6 @@
 package com.youssef.cinebook.Service;
 
+import com.youssef.cinebook.Component.TmdbClient;
 import com.youssef.cinebook.DTO.CategoryApi;
 import com.youssef.cinebook.DTO.MovieDetailsApi;
 import com.youssef.cinebook.DTO.VideoTeaser;
@@ -9,7 +10,7 @@ import com.youssef.cinebook.Mapper.CategoryMapper;
 import com.youssef.cinebook.Mapper.MovieMapper;
 import com.youssef.cinebook.Repository.CategoryRepository;
 import com.youssef.cinebook.Repository.MovieRepository;
-import com.youssef.cinebook.TmdbClient;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +57,10 @@ public class TmdbToBd {
 
     public void addNowPlayingMovies(int p){
         List<Long> movieIds=tmdbClient.getNowPlaying(p);
+        movieIds.forEach(this::addMovieToDb);
+    }
+    public void addPopularMovies(int p){
+        List<Long> movieIds=tmdbClient.getPopularMovies(p);
         movieIds.forEach(this::addMovieToDb);
     }
 
