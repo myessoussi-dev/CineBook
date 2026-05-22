@@ -29,8 +29,8 @@ public class SessionController {
         return sessionService.getRoomSeats(id);
     }
     @GetMapping("/{id}/reserved-seats")
-    public List<Seat> getReservedSeats(@PathVariable Long id){
-        return new ArrayList<>();
+    public List<SeatDTO> getReservedSeats(@PathVariable Long id){
+        return sessionService.getReservedSeats(id);
     }
 
 }

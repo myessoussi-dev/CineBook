@@ -1,7 +1,11 @@
 package com.youssef.cinebook.Entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 public class Room {
     @Id
@@ -12,27 +16,4 @@ public class Room {
     @Column(nullable = false)
     private String name;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getCapacity() {
-        return Capacity;
-    }
-
-    public void setCapacity(Integer capacity) {
-        Capacity = capacity;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 }

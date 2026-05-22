@@ -1,7 +1,11 @@
 package com.youssef.cinebook.Entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(uniqueConstraints = {
         @UniqueConstraint(columnNames = {"seat_id", "session_id"})

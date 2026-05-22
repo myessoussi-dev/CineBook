@@ -1,10 +1,9 @@
 package com.youssef.cinebook.Repository;
 
-import com.youssef.cinebook.Entity.Movie;
+import com.youssef.cinebook.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MovieRepository extends JpaRepository<Movie,Long> {
-    boolean existsById(Long movieId);
+public interface UserRepository extends JpaRepository<User,Long> {
 }
