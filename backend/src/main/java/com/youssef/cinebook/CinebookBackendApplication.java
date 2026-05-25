@@ -10,10 +10,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@EnableAsync
 @SpringBootApplication
 public class CinebookBackendApplication {
 
@@ -24,7 +25,7 @@ public class CinebookBackendApplication {
 	/*@Bean
 	public CommandLineRunner fullDB(TmdbToBd service){
 		return args -> {
-			service.addPopularMovies(1);
+			service.addUpcomingMovies(1);
 			System.out.println("les film ont ete ajoute avec success !!!!");
 		};
 	}*/
@@ -36,12 +37,12 @@ public class CinebookBackendApplication {
 			System.out.println("les sieges sont ajoute avec success !!!");
 		};
 	}*/
-	@Bean
+	/*@Bean
 	public CommandLineRunner getMoviesId(MovieRepository movieRepository){
 		return args -> {
 			List<Long> ids=movieRepository.findAll().stream().map(Movie::getId).toList();
 			System.out.println(ids);
 		};
-	}
+	}*/
 }
 

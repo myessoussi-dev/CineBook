@@ -9,6 +9,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "users")
 public class User {
+    public enum Role{
+        ADMIN,USER
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,4 +22,6 @@ public class User {
 
     @Column(nullable = false, length = 50)
     private String fullName;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }

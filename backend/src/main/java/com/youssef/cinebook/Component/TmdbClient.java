@@ -19,7 +19,7 @@ public class TmdbClient {
 
     public List<Long> getNowPlaying(int page){
         String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=" + API_KEY +
-                "&page="+page;
+                "&region=US&page="+page;
         MovieApi movieApi = apiClient.fetchMoviesJson(url, MovieApi.class);
         return movieApi.getResults().stream().map(MovieIdDTO::getId).toList();
     }
@@ -40,7 +40,13 @@ public class TmdbClient {
     }
     public List<Long> getPopularMovies(int page){
         String url = "https://api.themoviedb.org/3/movie/popular?api_key=" + API_KEY +
-                "&page="+page;
+                "&region=US&page="+page;
+        MovieApi movieApi=apiClient.fetchMoviesJson(url,MovieApi.class);
+        return movieApi.getResults().stream().map(MovieIdDTO::getId).toList();
+    }
+    public List<Long> getUpcomingMovies(int page){
+        String url = "https://api.themoviedb.org/3/movie/upcoming?api_key=" + API_KEY +
+                "&region=US&page="+page;
         MovieApi movieApi=apiClient.fetchMoviesJson(url,MovieApi.class);
         return movieApi.getResults().stream().map(MovieIdDTO::getId).toList();
     }

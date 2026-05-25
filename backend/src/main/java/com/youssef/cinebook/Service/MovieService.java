@@ -2,7 +2,6 @@ package com.youssef.cinebook.Service;
 
 import com.youssef.cinebook.DTO.SessionDTO;
 import com.youssef.cinebook.Entity.Movie;
-import com.youssef.cinebook.Entity.Session;
 import com.youssef.cinebook.Mapper.SessionMapper;
 import com.youssef.cinebook.Repository.CategoryRepository;
 import com.youssef.cinebook.Repository.MovieRepository;
@@ -24,9 +23,10 @@ public class MovieService {
         this.categoryRepository = categoryRepository;
         this.sessionRepository=sessionRepository;
     }
-    public List<Movie> getAllMovies(){
-        return movieRepository.findAll();
+    public List<Movie> getNowPlayingMovies(){
+        return movieRepository.findByStatus(Movie.MovieStatus.AVAILABLE);
     }
+    public List<Movie> getUpcomingMovies(){return movieRepository.findByStatus(Movie.MovieStatus.COMING_SOON);}
 
     public Movie getMovieDetails(Long id) {
         return movieRepository.findById(id).

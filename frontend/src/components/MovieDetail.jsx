@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMovieSessions } from '../hooks/useMovies'
+import { useAuth } from '../context/AuthContext'
+import LoginPromptModal from './LoginPromptModal'
 
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original'
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
@@ -45,8 +47,10 @@ const FORMAT_COLORS = {
 
 export default function MovieDetail({ movie, loading, error }) {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const { sessions, loading: sessLoading } = useMovieSessions(movie?.id)
   const [selectedDate, setSelectedDate] = useState(0)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
@@ -71,6 +75,16 @@ export default function MovieDetail({ movie, loading, error }) {
   const mins = movie.runtime % 60
   const groupedDates = groupByDate(sessions)
   const activeDateGroup = groupedDates[selectedDate]
+
+  function handleSessionClick(s) {
+    if (!isAuthenticated) {
+      setShowLoginModal(true)
+      return
+    }
+    navigate(`/api/movies/${movie.id}/sessions/${s.id}/seats`, {
+      state: { session: s, movie }
+    })
+  }
 
   return (
     <div style={{ minHeight: '100vh', animation: 'fadeIn 0.4s ease' }}>
@@ -185,15 +199,11 @@ export default function MovieDetail({ movie, loading, error }) {
             {movie.overview}
           </p>
 
-          {/* Sessions section */}
-          <div style={{
-            background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border)', padding: '28px',
-          }}>
-            <h3 style={{
-              fontFamily: 'var(--font-display)', fontSize: '22px',
-              letterSpacing: '2px', color: 'var(--text-primary)', marginBottom: '20px',
-            }}>CHOISIR UNE SÉANCE</h3>
+          {/* Sessions */}
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px' }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', letterSpacing: '2px', color: 'var(--text-primary)', marginBottom: '20px' }}>
+              CHOISIR UNE SÉANCE
+            </h3>
 
             {sessLoading ? (
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
@@ -204,31 +214,22 @@ export default function MovieDetail({ movie, loading, error }) {
               <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Aucune séance disponible pour ce film.</p>
             ) : (
               <>
-                {/* Date tabs */}
                 <p style={{ fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px', fontFamily: 'var(--font-mono)' }}>
                   Choisir une date
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
                   {groupedDates.map((g, i) => (
-                    <button
-                      key={g.label}
-                      onClick={() => setSelectedDate(i)}
-                      style={{
-                        padding: '8px 18px', borderRadius: '8px',
-                        border: `1px solid ${selectedDate === i ? 'var(--accent)' : 'var(--border)'}`,
-                        background: selectedDate === i ? 'rgba(232,160,32,0.12)' : 'transparent',
-                        color: selectedDate === i ? 'var(--accent)' : 'var(--text-muted)',
-                        fontSize: '13px', fontWeight: selectedDate === i ? 600 : 400,
-                        cursor: 'pointer', transition: 'all 0.2s',
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {g.label}
-                    </button>
+                    <button key={g.label} onClick={() => setSelectedDate(i)} style={{
+                      padding: '8px 18px', borderRadius: '8px',
+                      border: `1px solid ${selectedDate === i ? 'var(--accent)' : 'var(--border)'}`,
+                      background: selectedDate === i ? 'rgba(232,160,32,0.12)' : 'transparent',
+                      color: selectedDate === i ? 'var(--accent)' : 'var(--text-muted)',
+                      fontSize: '13px', fontWeight: selectedDate === i ? 600 : 400,
+                      cursor: 'pointer', transition: 'all 0.2s', textTransform: 'capitalize',
+                    }}>{g.label}</button>
                   ))}
                 </div>
 
-                {/* Session list */}
                 <p style={{ fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px', fontFamily: 'var(--font-mono)' }}>
                   Séances disponibles
                 </p>
@@ -236,15 +237,13 @@ export default function MovieDetail({ movie, loading, error }) {
                   {activeDateGroup?.sessions.map(s => {
                     const fmt = getRoomFormat(s.room?.name)
                     const fmtColor = FORMAT_COLORS[fmt]
-                    const capacity = s.room?.capacity ?? 0
+                    const capacity = s.room?.Capacity ?? 0
                     const almostFull = capacity > 0 && capacity < 20
 
                     return (
                       <div
                         key={s.id}
-                        onClick={() => navigate(`/api/movies/${movie.id}/sessions/${s.id}/seats`, {
-                          state: { session: s, movie }
-                        })}
+                        onClick={() => handleSessionClick(s)}
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '16px 20px', borderRadius: '10px',
@@ -264,36 +263,19 @@ export default function MovieDetail({ movie, loading, error }) {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                          <span style={{
-                            fontFamily: 'var(--font-mono)', fontSize: '18px',
-                            fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '1px',
-                          }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '1px' }}>
                             {formatTime(s.startTime)}
                           </span>
-                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                            {s.room?.name}
-                          </span>
+                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{s.room?.name}</span>
                         </div>
-
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span style={{
-                            fontFamily: 'var(--font-mono)', fontSize: '14px',
-                            color: 'var(--accent)', fontWeight: 700,
-                          }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--accent)', fontWeight: 700 }}>
                             {parseFloat(s.price).toFixed(2)} TND
                           </span>
-                          <span style={{
-                            fontSize: '11px', padding: '3px 9px', borderRadius: '4px',
-                            color: fmtColor, background: `${fmtColor}18`,
-                            border: `1px solid ${fmtColor}35`,
-                            fontWeight: 600, fontFamily: 'var(--font-mono)',
-                          }}>
+                          <span style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '4px', color: fmtColor, background: `${fmtColor}18`, border: `1px solid ${fmtColor}35`, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
                             {fmt}
                           </span>
-                          <span style={{
-                            fontSize: '12px', fontFamily: 'var(--font-mono)',
-                            color: almostFull ? '#f87171' : 'var(--text-dim)',
-                          }}>
+                          <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: almostFull ? '#f87171' : 'var(--text-dim)' }}>
                             {almostFull ? `⚠ ${capacity} restants` : `${capacity} places`}
                           </span>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" strokeWidth="2">
@@ -309,6 +291,13 @@ export default function MovieDetail({ movie, loading, error }) {
           </div>
         </div>
       </div>
+
+      {showLoginModal && (
+        <LoginPromptModal
+          onClose={() => setShowLoginModal(false)}
+          from={`/api/movies/${movie.id}`}
+        />
+      )}
     </div>
   )
 }

@@ -10,6 +10,11 @@ import java.util.List;
 @Setter
 @Entity
 public class Movie {
+    public enum MovieStatus {
+        AVAILABLE,
+        COMING_SOON,
+        ARCHIVED
+    }
     @Id
     private Long id;
 
@@ -43,6 +48,10 @@ public class Movie {
             inverseJoinColumns = @JoinColumn(name = "category_id")// ca veut dire l autre entity
             // cote
     )
-    private List<Category> categories;
 
+    private List<Category> categories;
+    @Column(nullable = true,
+            columnDefinition = "VARCHAR(20) CHECK (status IN ('AVAILABLE','COMING_SOON','ARCHIVED'))")
+    @Enumerated(EnumType.STRING)
+    private MovieStatus status;
 }

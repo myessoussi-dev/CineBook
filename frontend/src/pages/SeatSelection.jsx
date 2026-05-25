@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useSessionSeats, useSessionDetails } from '../hooks/useMovies'
+import { useAuth } from '../context/AuthContext'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
@@ -18,6 +19,7 @@ export default function SeatSelection() {
   const location = useLocation()
 
   // Get movie from navigation state (passed from MovieDetail)
+  const { user, token } = useAuth()
   const movieFromState = location.state?.movie
 
   const { session, loading: sessLoading } = useSessionDetails(sessionId)
@@ -67,11 +69,15 @@ export default function SeatSelection() {
     try {
       const res = await fetch(`${BASE_URL}/api/reservations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
-          userId: 1, // TODO: replace with real auth user id
+          userId: user?.id,
           sessionId: Number(sessionId),
           seatIds: selectedSeats.map(s => s.id),
+          price:parseFloat(totalPrice)
         }),
       })
       if (!res.ok) throw new Error('Erreur lors de la réservation')

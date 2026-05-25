@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Transactional
@@ -36,8 +37,8 @@ public class TmdbToBd {
         categoryRepository.saveAll(categories);
     }
 
-    public void addMovieToDb(Long movieId){
-        if (movieRepository.existsById(movieId)) return;
+    public Movie MovieMaker(Long movieId){
+        //if (movieRepository.existsById(movieId)) return;
 
         MovieDetailsApi movieDetailsApi=tmdbClient.getMovieDetails(movieId);
         String trailerKey = movieDetailsApi.getVideos()
@@ -52,16 +53,32 @@ public class TmdbToBd {
         List<Category> categories=categoryRepository.findAllById(movieDetailsApi.getGenres().stream()
                 .map(CategoryApi::getId).toList());
         movie.setCategories(categories);
-        movieRepository.save(movie);
+        return movie;
     }
 
     public void addNowPlayingMovies(int p){
         List<Long> movieIds=tmdbClient.getNowPlaying(p);
-        movieIds.forEach(this::addMovieToDb);
+        List<Movie> movies=new ArrayList<>();
+        for(Long id : movieIds){
+            Movie movie=MovieMaker(id);
+            movie.setStatus(Movie.MovieStatus.AVAILABLE);
+            movies.add(movie);
+        }
+        movieRepository.saveAll(movies);
     }
-    public void addPopularMovies(int p){
+    /*public void addPopularMovies(int p){
         List<Long> movieIds=tmdbClient.getPopularMovies(p);
-        movieIds.forEach(this::addMovieToDb);
+        movieIds.forEach(this::MovieMaker);
+    }*/
+    public void addUpcomingMovies(int p){
+        List<Long> movieIds=tmdbClient.getUpcomingMovies(p);
+        List<Movie> movies=new ArrayList<>();
+        for(Long id : movieIds){
+            Movie movie=MovieMaker(id);
+            movie.setStatus(Movie.MovieStatus.COMING_SOON);
+            movies.add(movie);
+        }
+        movieRepository.saveAll(movies);
     }
 
 }
