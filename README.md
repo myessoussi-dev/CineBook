@@ -37,7 +37,7 @@ The application follows a decoupled architecture with a Spring Boot backend expo
 
 - Frontend: React (Vite)
 - Backend: Spring Boot (REST API)
-- Database: Relational database (H2 for development)
+- Database: Relational database PostgreSQL 
 - External API: TMDB API
 
 The backend exposes secure REST endpoints consumed by the frontend. Authentication is handled using JWT tokens and Spring Security filters.
