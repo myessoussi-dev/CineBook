@@ -14,7 +14,6 @@ import com.youssef.cinebook.Repository.MovieRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,7 +54,14 @@ public class TmdbToBd {
         movie.setCategories(categories);
         return movie;
     }
-
+    public void addMoviesById(List<Long> ids){
+        List<Movie> movies=new ArrayList<>();
+        for(Long id : ids){
+            Movie movie=MovieMaker(id);
+            movies.add(movie);
+        }
+        movieRepository.saveAll(movies);
+    }
     public void addNowPlayingMovies(int p){
         List<Long> movieIds=tmdbClient.getNowPlaying(p);
         List<Movie> movies=new ArrayList<>();

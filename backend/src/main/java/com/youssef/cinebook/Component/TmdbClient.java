@@ -1,22 +1,22 @@
 package com.youssef.cinebook.Component;
 
 import com.youssef.cinebook.DTO.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 
 import java.util.List;
 
-import static com.youssef.cinebook.EnvConfig.API_KEY;
 
 @Component
 public class TmdbClient {
-
+    @Value("${API_KEY}")
+    private String API_KEY;
     private final ApiClient apiClient;
 
     public TmdbClient(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
-
     public List<Long> getNowPlaying(int page){
         String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=" + API_KEY +
                 "&region=US&page="+page;

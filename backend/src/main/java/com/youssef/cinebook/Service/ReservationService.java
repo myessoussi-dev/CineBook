@@ -78,14 +78,12 @@ public class ReservationService {
         String prix            = reservation.getPrice().toString();
         Long   numeroRes       = reservation.getId();
 
-        // ✅ Construire les badges ici aussi, pendant que les seats sont accessibles
         String siegesBadges = reservationSeatList.stream()
                 .map(s -> "<span style='background:#e94560; color:white; padding:4px 12px; " +
                         "border-radius:12px; margin:3px; display:inline-block; font-weight:bold;'>" +
                         s.getSeat().getRowSeat() + s.getSeat().getColumnSeat() + "</span>")
                 .collect(Collectors.joining(" "));
 
-        // ✅ Appel async avec des simples String, plus aucun lazy loading
         emailService.envoyerConfirmationReservation(
                 destinataire, nomUtilisateur, film, posterPath,
                 date, heure, salle, siegesBadges, prix, numeroRes

@@ -1,6 +1,7 @@
 package com.youssef.cinebook.Service;
 
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -19,7 +20,8 @@ public class EmailService {
     }
 
     private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
-    private static final String email = "EMAIL";
+    @Value("${MAIL}")
+    private static  String email;
     private static final String name = "CinéBook";
 
     @Async
