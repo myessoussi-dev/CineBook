@@ -21,7 +21,7 @@ public class EmailService {
 
     private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
     @Value("${MAIL}")
-    private static  String email;
+    private String email;
     private static final String name = "CinéBook";
 
     @Async

@@ -50,8 +50,7 @@ public class Movie {
     )
 
     private List<Category> categories;
-    @Column(nullable = true,
-            columnDefinition = "VARCHAR(20) CHECK (status IN ('AVAILABLE','COMING_SOON','ARCHIVED'))")
+
     @Enumerated(EnumType.STRING)
     private MovieStatus status;
 }
