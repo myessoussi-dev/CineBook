@@ -111,6 +111,16 @@ Movie data is automatically fetched from TMDB API and synchronized with the loca
 - CI/CD pipeline deployment
 
 ---
+## Demo
+
+| | |
+|:---:|:---:|
+| ![Home](screenshots/homePageHeroSection.png) | ![Films](screenshots/allMovies.png) |
+| **Page d'accueil** | **Tous les films** |
+| ![Séances](screenshots/MovieSessions.png) | ![Sélection sièges](screenshots/seatSelection.png) |
+| **Séances disponibles** | **Sélection des sièges** |
+| ![Confirmation](screenshots/reservationConfirm.png) | ![Email](screenshots/mail.png) |
+| **Confirmation réservation** | **Email de confirmation** |
 
 ## Author
 

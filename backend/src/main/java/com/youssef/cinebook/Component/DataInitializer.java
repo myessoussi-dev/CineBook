@@ -1,57 +1,57 @@
 package com.youssef.cinebook.Component;
 
 import com.youssef.cinebook.Service.TmdbToBd;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Component
-public class DataInitializer {
-    private final TmdbToBd tmdbToBd;
+public class DataInitializer implements ApplicationRunner {
 
+    private final TmdbToBd tmdbToBd;
     public DataInitializer(TmdbToBd tmdbToBd) {
         this.tmdbToBd = tmdbToBd;
     }
-    /*@Bean
-	public CommandLineRunner getGenres(TmdbToBd service){
-		return args -> {
-			service.addCategories();
-			System.out.println("les Categories sont ajoute avec success !!!!");
-		};
-	}
-	@Bean
-	public CommandLineRunner upcomingMovies(TmdbToBd service){
-		return args -> {
-			service.addUpcomingMovies(1);
-			System.out.println("les film avenir ont  ete ajoute avec success !!!!");
-		};
-	}
-	@Bean
-	public CommandLineRunner nowPlayingMovies(TmdbToBd service){
-		return args -> {
-			service.addNowPlayingMovies(1);
-			System.out.println("les film ont ete ajoute avec success !!!!");
-		};
-	}*/
-	/*@Bean
-	public CommandLineRunner fullseats(SeatService seatService) {
-		return args -> {
-			List<Long> ids = new ArrayList<>(List.of(1L, 2L, 3L, 4L));
-			seatService.fullSeatTable(ids);
-			System.out.println("les sieges sont ajoute avec success !!!");
-		};
-	}*/
 
-	/*@Bean
-	public CommandLineRunner getMoviesId(MovieRepository movieRepository){
-		return args -> {
-			List<Long> ids=movieRepository.findByStatus(Movie.MovieStatus.AVAILABLE).stream().map(Movie::getId).toList();
-			System.out.println(ids);
-		};
-	}*/
-	/*@Bean
-	public CommandLineRunner addmovies(TmdbToBd service){
-		return args -> {
-			service.addMoviesById(List.of(1226863L,687163L));
-			System.out.println("les film ont ete ajoute avec success !!!!");
-		};
-	}*/
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
+        if (args.containsOption("init-all")) {
+            System.out.println("Lancement de l'initialisation complète des données...");
+            tmdbToBd.addCategories();
+            tmdbToBd.addUpcomingMovies(1);
+            tmdbToBd.addNowPlayingMovies(1);
+            System.out.println("✅ Initialisation complète terminée !");
+            return;
+        }
+        if (args.containsOption("init-categories")) {
+            tmdbToBd.addCategories();
+            System.out.println("Les catégories ont été ajoutées avec succès !");
+        }
+
+        if (args.containsOption("init-upcoming")) {
+            tmdbToBd.addUpcomingMovies(1);
+            System.out.println("Les films à venir ont été ajoutés avec succès !");
+        }
+
+        if (args.containsOption("init-now-playing")) {
+            tmdbToBd.addNowPlayingMovies(1);
+            System.out.println("Les films à l'affiche ont été ajoutés avec succès !");
+        }
+
+        if (args.containsOption("add-movies")) {
+            List<String> movieIdsRaw = args.getOptionValues("add-movies");
+            if (movieIdsRaw != null && !movieIdsRaw.isEmpty()) {
+                List<Long> movieIds = Stream.of(movieIdsRaw.getFirst().split(","))
+                        .map(String::trim)
+                        .map(Long::parseLong)
+                        .toList();
+
+                tmdbToBd.addMoviesById(movieIds);
+                System.out.println("Les films spécifiques " + movieIds + " ont été ajoutés !");
+            }
+        }
+    }
 }
