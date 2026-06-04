@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ShowMovieDetails {
@@ -18,7 +19,7 @@ public class ShowMovieDetails {
         this.tmdbClient = tmdbClient;
     }
     public void showMovies()throws IOException{
-        List<Long> movieIds=tmdbClient.getNowPlaying(1);
+        Set<Long> movieIds=tmdbClient.getNowPlaying(1);
         for (Long id : movieIds){
             MovieDetailsApi movieDetailsApi=tmdbClient.getMovieDetails(id);
 

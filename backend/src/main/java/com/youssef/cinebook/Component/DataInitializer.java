@@ -1,9 +1,14 @@
 package com.youssef.cinebook.Component;
 
+import com.youssef.cinebook.Entity.Room;
+import com.youssef.cinebook.Repository.RoomRepository;
+import com.youssef.cinebook.Service.SeatService;
 import com.youssef.cinebook.Service.TmdbToBd;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -11,8 +16,13 @@ import java.util.stream.Stream;
 public class DataInitializer implements ApplicationRunner {
 
     private final TmdbToBd tmdbToBd;
-    public DataInitializer(TmdbToBd tmdbToBd) {
+    private final SeatService seatService;
+    private final RoomRepository roomRepository;
+    public DataInitializer(TmdbToBd tmdbToBd , SeatService seatService,
+                           RoomRepository roomRepository) {
         this.tmdbToBd = tmdbToBd;
+        this.seatService=seatService;
+        this.roomRepository=roomRepository;
     }
 
     @Override
@@ -21,8 +31,25 @@ public class DataInitializer implements ApplicationRunner {
         if (args.containsOption("init-all")) {
             System.out.println("Lancement de l'initialisation complète des données...");
             tmdbToBd.addCategories();
-            tmdbToBd.addUpcomingMovies(1);
+            //tmdbToBd.addUpcomingMovies(1);
             tmdbToBd.addNowPlayingMovies(1);
+            if (roomRepository.count() == 0) {
+
+                List<Room> rooms = new ArrayList<>();
+
+                for (int i = 1; i <= 4; i++) {
+                    Room r = new Room();
+                    r.setCapacity(160);
+                    r.setName("salle " + i);
+                    rooms.add(r);
+                }
+
+                roomRepository.saveAll(rooms);
+            }
+            System.out.println("les salles sont ajoutees avec success");
+            List<Long> ids = new ArrayList<>(List.of(1L, 2L, 3L, 4L));
+            seatService.fullSeatTable(ids);
+            System.out.println("les sieges sont ajoute avec success !!!");
             System.out.println("✅ Initialisation complète terminée !");
             return;
         }
@@ -38,7 +65,7 @@ public class DataInitializer implements ApplicationRunner {
 
         if (args.containsOption("init-now-playing")) {
             tmdbToBd.addNowPlayingMovies(1);
-            System.out.println("Les films à l'affiche ont été ajoutés avec succès !");
+            System.out.println("Les films à l'affiche ont été mis à jour avec succès !");
         }
 
         if (args.containsOption("add-movies")) {

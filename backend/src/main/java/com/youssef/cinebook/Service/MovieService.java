@@ -3,7 +3,6 @@ package com.youssef.cinebook.Service;
 import com.youssef.cinebook.DTO.SessionDTO;
 import com.youssef.cinebook.Entity.Movie;
 import com.youssef.cinebook.Mapper.SessionMapper;
-import com.youssef.cinebook.Repository.CategoryRepository;
 import com.youssef.cinebook.Repository.MovieRepository;
 import com.youssef.cinebook.Repository.SessionRepository;
 import org.springframework.stereotype.Service;
@@ -14,13 +13,11 @@ import java.util.List;
 @Service
 public class MovieService {
     private final MovieRepository movieRepository;
-    private final CategoryRepository categoryRepository;
     private final SessionRepository sessionRepository;
 
-    public MovieService(MovieRepository movieRepository, CategoryRepository categoryRepository,
+    public MovieService(MovieRepository movieRepository,
                         SessionRepository sessionRepository) {
         this.movieRepository = movieRepository;
-        this.categoryRepository = categoryRepository;
         this.sessionRepository=sessionRepository;
     }
     public List<Movie> getNowPlayingMovies(){

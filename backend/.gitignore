@@ -16,5 +16,6 @@ mvnw.cmd
 .mvn
 .env
 src/test
+data
 ### VS Code ###
 .vscode/

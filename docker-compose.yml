@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: cinebook_frontend
+    ports:
+      - "5173:5173" 
+    volumes:
+      - ./frontend:/app 
+      - /app/node_modules                
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+
+
+  backend:
+    build:
+      context: ./backend
+    container_name: cinebook_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - TZ=Africa/Tunis
+      - MAIL=${MAIL}
+      - API_KEY=${API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cinebook_db
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17-alpine
+    container_name: cinebook_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./backend/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${SPRING_DATASOURCE_USERNAME}
+      - POSTGRES_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - POSTGRES_DB=cinebook_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinebook_user -d cinebook_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+

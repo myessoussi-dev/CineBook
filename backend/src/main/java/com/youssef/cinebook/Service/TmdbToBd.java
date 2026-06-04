@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -23,11 +26,15 @@ public class TmdbToBd {
     private final TmdbClient tmdbClient;
     private final MovieRepository movieRepository;
     private final CategoryRepository categoryRepository;
+    private final MovieService movieService;
 
-    public TmdbToBd(TmdbClient tmdbClient, MovieRepository movieRepository, CategoryRepository categoryRepository) {
+    public TmdbToBd(TmdbClient tmdbClient, MovieRepository movieRepository,
+                    CategoryRepository categoryRepository,
+                    MovieService movieService) {
         this.tmdbClient = tmdbClient;
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
+        this.movieService=movieService;
     }
 
     public void addCategories() {
@@ -58,19 +65,41 @@ public class TmdbToBd {
         List<Movie> movies=new ArrayList<>();
         for(Long id : ids){
             Movie movie=MovieMaker(id);
-            movies.add(movie);
-        }
-        movieRepository.saveAll(movies);
-    }
-    public void addNowPlayingMovies(int p){
-        List<Long> movieIds=tmdbClient.getNowPlaying(p);
-        List<Movie> movies=new ArrayList<>();
-        for(Long id : movieIds){
-            Movie movie=MovieMaker(id);
             movie.setStatus(Movie.MovieStatus.AVAILABLE);
             movies.add(movie);
         }
         movieRepository.saveAll(movies);
+    }
+    public void addNowPlayingMovies(int p) {
+        Set<Long> movieIds = tmdbClient.getNowPlaying(p);
+        List<Movie> moviesDb = movieService.getNowPlayingMovies();
+
+        Map<Long, Movie> movieDbMap = moviesDb.stream()
+                .collect(Collectors.toMap(Movie::getId, m -> m));
+
+        List<Movie> moviesToSave = new ArrayList<>();
+        for (Long id : movieIds) {
+            if (!movieDbMap.containsKey(id)) {
+                Movie newCineMovie = MovieMaker(id);
+                newCineMovie.setStatus(Movie.MovieStatus.AVAILABLE);
+                moviesToSave.add(newCineMovie);
+            } else {
+                Movie existingMovie = movieDbMap.get(id);
+                Movie updatedData = MovieMaker(id);
+                existingMovie.setPopularity(updatedData.getPopularity());
+                existingMovie.setVoteCount(updatedData.getVoteCount());
+                existingMovie.setVoteAverage(updatedData.getVoteAverage());
+
+                moviesToSave.add(existingMovie);
+            }
+        }
+        for (Movie m : moviesDb) {
+            if (!movieIds.contains(m.getId())) {
+                m.setStatus(Movie.MovieStatus.ARCHIVED);
+                moviesToSave.add(m);
+            }
+        }
+        movieRepository.saveAll(moviesToSave);
     }
     /*public void addPopularMovies(int p){
         List<Long> movieIds=tmdbClient.getPopularMovies(p);
