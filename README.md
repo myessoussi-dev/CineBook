@@ -15,7 +15,7 @@ A full-stack web application for cinema management and online movie reservations
 
 ---
 
-##Architecture
+## Architecture
 
 ```
 ┌─────────────────┐        REST API (JWT)       ┌──────────────────────┐
