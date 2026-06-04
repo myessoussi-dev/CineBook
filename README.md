@@ -1,127 +1,144 @@
-# Online Cinema Booking Platform
+# CineBook — Online Cinema Booking Platform
 
-## Overview
+A full-stack web application for cinema management and online movie reservations. Users can browse movies, select seats, book tickets, and receive email confirmations. Movie data is synchronized automatically from the TMDB API.
 
-This project is a full-stack web application for cinema management and online movie reservations. It allows users to browse movies, create accounts, select seats, book tickets, and receive booking confirmation emails. The system integrates external movie data from the TMDB API and synchronizes it with a local database.
-
-The application follows a decoupled architecture with a Spring Boot backend exposing REST APIs and a React (Vite) frontend client.
+> **Stack:** Spring Boot · React (Vite) · PostgreSQL · Docker · JWT · TMDB API
 
 ---
 
 ## Features
 
-### Authentication and Authorization
-- User registration and login
-- JWT-based authentication
-- Role-based access control using Spring Security
-- Protected REST endpoints
-
-### Movie Management
-- Integration with TMDB API for movie data retrieval
-- Automated synchronization of movies into the database
-- Movie categorization (now playing, upcoming, etc.)
-
-### Reservation System
-- Seat selection for movie sessions
-- Booking management per user
-- Seat availability validation
-- Reservation history per user
-
-### Email Notifications
-- Automatic email confirmation after reservation
-- Includes full reservation details (movie, session, seats)
+- **Authentication** — Registration, login, JWT-based auth, role-based access (Spring Security)
+- **Movie Catalog** — TMDB API integration with automated database synchronization (Now Playing, Upcoming…)
+- **Reservation System** — Seat selection, availability validation, booking history per user
+- **Email Notifications** — Async confirmation emails with full booking details after each reservation
 
 ---
 
-## Architecture
+##Architecture
 
-- Frontend: React (Vite)
-- Backend: Spring Boot (REST API)
-- Database: Relational database PostgreSQL 
-- External API: TMDB API
+```
+┌─────────────────┐        REST API (JWT)       ┌──────────────────────┐
+│  React (Vite)   │ ◄─────────────────────────► │  Spring Boot API     │
+│  Frontend       │                              │  Backend             │
+└─────────────────┘                              └──────────┬───────────┘
+                                                            │
+                                              ┌─────────────▼────────────┐
+                                              │      PostgreSQL DB        │
+                                              └──────────────────────────┘
+                                                            │
+                                              ┌─────────────▼────────────┐
+                                              │     TMDB External API     │
+                                              └──────────────────────────┘
+```
 
-The backend exposes secure REST endpoints consumed by the frontend. Authentication is handled using JWT tokens and Spring Security filters.
-
----
-
-## Backend
-
-Technologies:
-- Java
-- Spring Boot
-- Spring Security
-- JWT
-- JPA / Hibernate
-- Maven
-
-Responsibilities:
-- REST API development
-- Authentication and authorization
-- Business logic (reservations, seat management, movies)
-- Database management
-- TMDB API integration
-- Email service integration
+All services are containerized and orchestrated with **Docker Compose**.
 
 ---
 
-## Frontend
+## Getting Started
 
-Technologies:
-- React
-- Vite
-- JavaScript
+### Prerequisites
 
-Responsibilities:
-- Movie browsing interface
-- Seat selection UI
-- Authentication pages (login/register)
-- API communication with backend
-- User session handling
+- [Docker](https://www.docker.com/) & Docker Compose
+- A [TMDB API key]
+- A Gmail account with an [App Password] for email notifications
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/myessoussi-dev/CineBook.git
+cd cinebook
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file at the root (see `.env.example`):
+
+```env
+API_KEY=your_tmdb_api_key
+
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=your_password
+
+SECRET_KEY=your_jwt_secret_key
+
+MAIL=your_email@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
+```
+
+---
+
+### 3. Run with Docker Compose
+
+To start:
+
+```bash
+docker compose up --build
+```
+
+To stop:
+
+```bash
+docker compose down
+```
 
 ---
 
 ## Main Workflow
 
-### Movie Synchronization
-Movie data is automatically fetched from TMDB API and synchronized with the local database to keep the catalog up to date.
+```
+User selects movie & session
+        ↓
+Seat selection (real-time availability)
+        ↓
+Reservation request → Backend validates & stores
+        ↓
+Async confirmation email sent to user
+```
 
-### Reservation Flow
-1. User selects a movie and session
-2. User selects available seats
-3. Reservation request is sent to backend
-4. Backend validates seat availability and stores reservation
-5. Confirmation email is sent to the user
+Movie data is fetched from TMDB and synchronized into the local database automatically on startup.
+
+---
+
+##Tech Stack
+
+| Layer    | Technology                         |
+|----------|------------------------------------|
+| Frontend | React, Vite, JavaScript            |
+| Backend  | Java, Spring Boot, Spring Security |
+| Auth     | JWT                                |
+| Database | PostgreSQL, JPA / Hibernate        |
+| Email    | JavaMailSender, SMTP (async)       |
+| External | TMDB API                           |
+| DevOps   | Docker, Docker Compose             |
+| Build    | Maven                              |
 
 ---
 
 ## Security
 
-- JWT-based stateless authentication
-- Spring Security filters for request validation
-- Protected API endpoints for authenticated users only
+- Stateless JWT authentication
+- Spring Security filters on all protected endpoints
+- Passwords hashed with BCrypt
+- All sensitive credentials via environment variables (never committed)
 
 ---
 
-## Future Improvements
-
-- Payment integration system
-- Admin dashboard for managing movies and sessions
-- Recommendation system
-- Docker containerization
-- CI/CD pipeline deployment
-
----
-## Demo
+## Screenshots
 
 | | |
 |:---:|:---:|
 | ![Home](screenshots/homePageHeroSection.png) | ![Films](screenshots/allMovies.png) |
-| **Page d'accueil** | **Tous les films** |
-| ![Séances](screenshots/MovieSessions.png) | ![Sélection sièges](screenshots/seatSelection.png) |
-| **Séances disponibles** | **Sélection des sièges** |
+| **Home Page** | **All Movies** |
+| ![Sessions](screenshots/MovieSessions.png) | ![Seat Selection](screenshots/seatSelection.png) |
+| **Available Sessions** | **Seat Selection** |
 | ![Confirmation](screenshots/reservationConfirm.png) | ![Email](screenshots/mail.png) |
-| **Confirmation réservation** | **Email de confirmation** |
+| **Booking Confirmation** | **Confirmation Email** |
+
+---
 
 ## Author
 
-Youssef Essoussi
+**Youssef Essoussi**  
+**INSAT software engineering student**
