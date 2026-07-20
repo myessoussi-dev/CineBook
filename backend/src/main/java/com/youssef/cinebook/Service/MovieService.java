@@ -5,6 +5,7 @@ import com.youssef.cinebook.Entity.Movie;
 import com.youssef.cinebook.Mapper.SessionMapper;
 import com.youssef.cinebook.Repository.MovieRepository;
 import com.youssef.cinebook.Repository.SessionRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public class MovieService {
         this.movieRepository = movieRepository;
         this.sessionRepository=sessionRepository;
     }
+    @Cacheable(value = "homeMovies")
     public List<Movie> getNowPlayingMovies(){
         return movieRepository.findByStatus(Movie.MovieStatus.AVAILABLE);
     }

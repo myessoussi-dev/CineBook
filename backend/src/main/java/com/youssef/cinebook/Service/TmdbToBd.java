@@ -26,15 +26,12 @@ public class TmdbToBd {
     private final TmdbClient tmdbClient;
     private final MovieRepository movieRepository;
     private final CategoryRepository categoryRepository;
-    private final MovieService movieService;
 
     public TmdbToBd(TmdbClient tmdbClient, MovieRepository movieRepository,
-                    CategoryRepository categoryRepository,
-                    MovieService movieService) {
+                    CategoryRepository categoryRepository) {
         this.tmdbClient = tmdbClient;
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
-        this.movieService=movieService;
     }
 
     public void addCategories() {
@@ -72,7 +69,7 @@ public class TmdbToBd {
     }
     public void addNowPlayingMovies(int p) {
         Set<Long> movieIds = tmdbClient.getNowPlaying(p);
-        List<Movie> moviesDb = movieService.getNowPlayingMovies();
+        List<Movie> moviesDb = movieRepository.findByStatus(Movie.MovieStatus.AVAILABLE);
 
         Map<Long, Movie> movieDbMap = moviesDb.stream()
                 .collect(Collectors.toMap(Movie::getId, m -> m));

@@ -19,4 +19,5 @@ EXPOSE 8080
 #this for the first launch
 #ENTRYPOINT ["java", "-jar", "app.jar","--init-all"]
 #then use this down below:
-ENTRYPOINT ["java", "-jar", "app.jar","--init-now-playing"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD [ "--init-now-playing" ]

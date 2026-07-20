@@ -18,17 +18,17 @@ A full-stack web application for cinema management and online movie reservations
 ## Architecture
 
 ```
-┌─────────────────┐        REST API (JWT)       ┌──────────────────────┐
-│  React (Vite)   │ ◄─────────────────────────► │  Spring Boot API     │
+┌─────────────────┐        REST API (JWT)        ┌──────────────────────┐
+│  React (Vite)   │ ◄─────────────────────────►  │  Spring Boot API     │
 │  Frontend       │                              │  Backend             │
 └─────────────────┘                              └──────────┬───────────┘
                                                             │
                                               ┌─────────────▼────────────┐
-                                              │      PostgreSQL DB        │
+                                              │      PostgreSQL DB       │
                                               └──────────────────────────┘
                                                             │
                                               ┌─────────────▼────────────┐
-                                              │     TMDB External API     │
+                                              │     TMDB External API    │
                                               └──────────────────────────┘
 ```
 
@@ -101,7 +101,7 @@ Movie data is fetched from TMDB and synchronized into the local database automat
 
 ---
 
-##Tech Stack
+## Tech Stack
 
 | Layer    | Technology                         |
 |----------|------------------------------------|

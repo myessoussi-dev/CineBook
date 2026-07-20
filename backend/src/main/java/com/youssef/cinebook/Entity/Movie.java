@@ -4,12 +4,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 @Getter
 @Setter
 @Entity
-public class Movie {
+public class Movie implements Serializable {
     public enum MovieStatus {
         AVAILABLE,
         COMING_SOON,
@@ -39,7 +40,7 @@ public class Movie {
     private Double voteAverage;
     private Integer voteCount;
     private Double popularity;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     // Remarque : joinColumns est un tableau car il peut contenir plusieurs colonnes
     // dans le cas où la clé primaire de l’entité référencée est composite (plusieurs champs).
     // Dans le cas normal, une seule colonne suffit (clé simple).
