@@ -74,32 +74,40 @@ public class EmailService {
             <head>
               <meta charset="UTF-8">
               <style>
-                body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-                .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-                .header { background: linear-gradient(135deg, #1a1a2e, #e94560); padding: 30px; text-align: center; color: white; }
-                .header h1 { margin: 0; font-size: 28px; letter-spacing: 2px; }
-                .header p { margin: 5px 0 0; opacity: 0.85; font-size: 14px; }
-                .poster { text-align: center; padding: 20px; background: #1a1a2e; }
-                .poster img { width: 160px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
-                .body { padding: 30px; color: #333; }
-                .body h2 { color: #1a1a2e; margin-bottom: 20px; }
-                .detail-box { background: #f9f9f9; border-left: 4px solid #e94560; border-radius: 8px; padding: 20px; margin: 20px 0; }
-                .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 20px auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #2a2a2a; }
+                .header { background: linear-gradient(135deg, #1a1a1a 0%%, #2a2a2a 100%%); padding: 50px 30px; text-align: center; border-bottom: 3px solid #f4a000; }
+                .header h1 { margin: 0; font-size: 36px; font-weight: 800; color: #f4a000; letter-spacing: -1px; }
+                .header p { margin: 10px 0 0; color: #999; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+                .poster { text-align: center; padding: 30px; background: #0f0f0f; }
+                .poster img { width: 150px; border-radius: 8px; box-shadow: 0 8px 24px rgba(244, 160, 0, 0.3); border: 2px solid #f4a000; }
+                .body { padding: 40px 30px; color: #ddd; }
+                .greeting { font-size: 16px; margin-bottom: 35px; line-height: 1.6; }
+                .greeting strong { color: #f4a000; font-weight: 700; }
+                .detail-box { background: #252525; border-radius: 8px; padding: 0; margin: 30px 0; overflow: hidden; border: 1px solid #333; }
+                .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
                 .detail-row:last-child { border-bottom: none; }
-                .detail-label { color: #666; font-size: 14px; }
-                .total { font-weight: bold; color: #e94560; font-size: 16px; }
-                .reservation-num { background: #1a1a2e; color: white; text-align: center; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 18px; letter-spacing: 3px; }
-                .footer { background: #1a1a2e; color: #aaa; text-align: center; padding: 20px; font-size: 12px; }
-                .footer a { color: #e94560; text-decoration: none; }
-                .warning { background: #fff8e1; border-left: 4px solid #ffc107; padding: 10px 15px; border-radius: 6px; font-size: 13px; color: #666; margin-top: 15px; }
+                .detail-label { color: #999; font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+                .detail-value { color: #fff; font-weight: 600; }
+                .total-row { background: linear-gradient(90deg, #f4a000 0%%, #d99000 100%%); padding: 18px 20px !important; border-bottom: none !important; }
+                .total-label { color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px; }
+                .total-value { color: #000; font-size: 18px; font-weight: 800; }
+                .reservation-section { margin: 35px 0; }
+                .reservation-label { color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+                .reservation-num { background: #f4a000; color: #000; text-align: center; padding: 25px; border-radius: 8px; font-size: 24px; font-weight: 800; letter-spacing: 3px; box-shadow: 0 6px 20px rgba(244, 160, 0, 0.4); }
+                .info-section { background: #252525; border-left: 4px solid #f4a000; padding: 16px 18px; border-radius: 6px; font-size: 13px; color: #ccc; line-height: 1.8; margin-top: 30px; }
+                .info-section strong { color: #f4a000; }
+                .footer { background: #0f0f0f; color: #666; text-align: center; padding: 30px; font-size: 12px; border-top: 1px solid #2a2a2a; }
+                .footer a { color: #f4a000; text-decoration: none; font-weight: 600; }
+                .footer p { margin: 6px 0; }
               </style>
             </head>
             <body>
               <div class="container">
 
                 <div class="header">
-                  <h1>🎬 CinéBook</h1>
-                  <p>Votre billet de cinéma numérique</p>
+                  <h1>CinéBook</h1>
+                  <p>Confirmation de réservation</p>
                 </div>
 
                 <div class="poster">
@@ -107,48 +115,51 @@ public class EmailService {
                 </div>
 
                 <div class="body">
-                  <h2>Bonjour %s,</h2>
-                  <p>Votre réservation est <strong style="color:#e94560;">confirmée</strong> ! Voici votre récapitulatif :</p>
+                  <div class="greeting">
+                    Bonjour <strong>%s</strong>,<br>
+                    Votre réservation est <strong>confirmée</strong> !
+                  </div>
 
                   <div class="detail-box">
                     <div class="detail-row">
-                      <span class="detail-label">🎥 Film</span>
-                      <span><strong>%s</strong></span>
+                      <span class="detail-label">Film</span>
+                      <span class="detail-value">%s</span>
                     </div>
                     <div class="detail-row">
-                      <span class="detail-label">📅 Date</span>
-                      <span>%s</span>
+                      <span class="detail-label">Date</span>
+                      <span class="detail-value">%s</span>
                     </div>
                     <div class="detail-row">
-                      <span class="detail-label">⏰ Séance</span>
-                      <span>%s</span>
+                      <span class="detail-label">Séance</span>
+                      <span class="detail-value">%s</span>
                     </div>
                     <div class="detail-row">
-                      <span class="detail-label">🏛️ Salle</span>
-                      <span>%s</span>
+                      <span class="detail-label">Salle</span>
+                      <span class="detail-value">%s</span>
                     </div>
                     <div class="detail-row">
-                      <span class="detail-label">💺 Siège(s)</span>
-                      <div style="text-align:right;">%s</div>
+                      <span class="detail-label">Siège(s)</span>
+                      <span class="detail-value">%s</span>
                     </div>
-                    <div class="detail-row">
-                      <span class="detail-label">💳 Total payé</span>
-                      <span class="total">%s TND</span>
+                    <div class="detail-row total-row">
+                      <span class="total-label">Total à payer</span>
+                      <span class="total-value">%s TND</span>
                     </div>
                   </div>
 
-                  <div class="reservation-num">
-                    🎟️ N° %s
+                  <div class="reservation-section">
+                    <div class="reservation-label">Numéro de réservation</div>
+                    <div class="reservation-num">%s</div>
                   </div>
 
-                  <div class="warning">
-                    ⚠️ Présentez ce mail ou votre numéro de réservation à l'entrée. Merci d'arriver <strong>10 minutes avant</strong> la séance.
+                  <div class="info-section">
+                    Présentez ce numéro ou ce mail à l'entrée. Arrivez <strong>10 minutes avant</strong> la séance pour un meilleur accueil.
                   </div>
                 </div>
 
                 <div class="footer">
                   <p>© 2026 CinéBook • <a href="#">Politique de confidentialité</a> • <a href="#">Support</a></p>
-                  <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+                  <p style="color: #555; margin-top: 12px;">Cet email a été envoyé automatiquement.</p>
                 </div>
 
               </div>
@@ -161,7 +172,7 @@ public class EmailService {
                 date,               // date
                 heure,              // séance
                 salle,              // salle
-                siegesBadges,       // sièges badges
+                siegesBadges,       // sièges
                 prix,               // total
                 numeroReservation   // numéro réservation
         );
