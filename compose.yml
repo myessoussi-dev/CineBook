@@ -1,26 +1,8 @@
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: cinebook_frontend
-    ports:
-      - "5173:5173" 
-    volumes:
-      - ./frontend:/app 
-      - /app/node_modules                
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-    depends_on:
-      - backend
-
-
   backend:
     build:
       context: ./backend
     container_name: cinebook_backend
-    ports:
-      - "8080:8080"
     environment:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - TZ=Africa/Tunis
@@ -41,8 +23,6 @@ services:
   db:
     image: postgres:17-alpine
     container_name: cinebook_db
-    ports:
-      - "5432:5432"
     volumes:
       - ./backend/data:/var/lib/postgresql/data
     environment:
@@ -57,13 +37,19 @@ services:
   redis:
     image: redis:8.2-alpine
     container_name: cinebook_cache
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD","redis-cli","ping"]
       interval: 1m30s
       timeout: 30s
       retries: 5
       start_period: 30s
-
+  nginx:
+    build:
+      context: . #Docker interdit de copier un fichier qui se trouve en dehors du build context.
+      dockerfile: frontend/Dockerfile.prod
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
