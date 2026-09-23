@@ -249,7 +249,7 @@ export default function Home() {
       element: <MovieListView movies={movies} loading={loading} error={error} />,
     },
     {
-      path: '/api/movies/:id',
+      path: '/movies/:id',
       element: <MovieDetailView />,
     },
   ])

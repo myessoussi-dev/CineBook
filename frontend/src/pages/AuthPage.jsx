@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-
 export default function AuthPage() {
   
   const [showPass, setShowPass] = useState(false)
@@ -52,7 +50,7 @@ export default function AuthPage() {
   try {
     // 1. Register d'abord si besoin
     if (mode === 'register') {
-      const res = await fetch(`${BASE_URL}/auth/register`, {
+      const res = await fetch(`/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -70,7 +68,7 @@ export default function AuthPage() {
     }
 
     // 2. Login dans tous les cas (après register ou directement)
-    const loginRes = await fetch(`${BASE_URL}/auth/login`, {
+    const loginRes = await fetch(`/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

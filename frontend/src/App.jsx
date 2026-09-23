@@ -15,7 +15,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage />} />
-        <Route path="/api/movies/:id/sessions/:sessionId/seats" element={<SeatSelection />} />
+        <Route path="/movies/:id/sessions/:sessionId/seats" element={<SeatSelection />} />
         <Route path="/*" element={<Home />} />
       </Routes>
     </>

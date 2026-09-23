@@ -81,7 +81,7 @@ export default function MovieDetail({ movie, loading, error }) {
       setShowLoginModal(true)
       return
     }
-    navigate(`/api/movies/${movie.id}/sessions/${s.id}/seats`, {
+    navigate(`/movies/${movie.id}/sessions/${s.id}/seats`, {
       state: { session: s, movie }
     })
   }
@@ -295,7 +295,7 @@ export default function MovieDetail({ movie, loading, error }) {
       {showLoginModal && (
         <LoginPromptModal
           onClose={() => setShowLoginModal(false)}
-          from={`/api/movies/${movie.id}`}
+          from={`/movies/${movie.id}`}
         />
       )}
     </div>

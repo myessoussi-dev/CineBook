@@ -17,7 +17,7 @@ export default function MovieCard({ movie, index = 0 }) {
 
   return (
     <div
-      onClick={() => navigate(`/api/movies/${movie.id}`)}
+      onClick={() => navigate(`/movies/${movie.id}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{

@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-
 function getToken() {
   return localStorage.getItem('cinebook_token')
 }
@@ -40,7 +38,7 @@ export function useMovies() {
 
   useEffect(() => {
     setLoading(true)
-    fetchWithAuth(`${BASE_URL}/api/movies`)
+    fetchWithAuth(`/api/movies`)
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json() })
       .then(data => {
         const list = Array.isArray(data) ? data : data.content ?? data.data ?? []
@@ -62,7 +60,7 @@ export function useMovieById(id) {
     if (!id) return
     setLoading(true)
     setMovie(null)
-    fetchWithAuth(`${BASE_URL}/api/movies/${id}`)
+    fetchWithAuth(`/api/movies/${id}`)
       .then(res => { if (!res.ok) throw new Error('Film non trouvé'); return res.json() })
       .then(data => { setMovie(data); setLoading(false) })
       .catch(err => { setError(err.message); setLoading(false) })
@@ -79,7 +77,7 @@ export function useMovieSessions(movieId) {
   useEffect(() => {
     if (!movieId) return
     setLoading(true)
-    fetchWithAuth(`${BASE_URL}/api/movies/${movieId}/sessions`)
+    fetchWithAuth(`/api/movies/${movieId}/sessions`)
       .then(res => { if (!res.ok) throw new Error('Sessions introuvables'); return res.json() })
       .then(data => { setSessions(Array.isArray(data) ? data : data.content ?? []); setLoading(false) })
       .catch(err => { setError(err.message); setLoading(false) })
@@ -97,7 +95,7 @@ export function useSessionDetails(sessionId) {
   useEffect(() => {
     if (!sessionId) return
     setLoading(true)
-    fetchWithAuth(`${BASE_URL}/api/sessions/${sessionId}`)
+    fetchWithAuth(`/api/sessions/${sessionId}`)
       .then(res => { if (!res.ok) throw new Error('Session introuvable'); return res.json() })
       .then(data => { setSession(data); setLoading(false) })
       .catch(err => {
@@ -120,8 +118,8 @@ export function useSessionSeats(sessionId) {
     if (!sessionId) return
     setLoading(true)
     Promise.all([
-      fetchWithAuth(`${BASE_URL}/api/sessions/${sessionId}/seats`).then(r => r.json()),
-      fetchWithAuth(`${BASE_URL}/api/sessions/${sessionId}/reserved-seats`).then(r => r.json()),
+      fetchWithAuth(`/api/sessions/${sessionId}/seats`).then(r => r.json()),
+      fetchWithAuth(`/api/sessions/${sessionId}/reserved-seats`).then(r => r.json()),
     ])
       .then(([allSeats, reserved]) => {
         setSeats(Array.isArray(allSeats) ? allSeats : [])
@@ -138,4 +136,4 @@ export function useSessionSeats(sessionId) {
   return { seats, reservedIds, loading, authError }
 }
 
-export { fetchWithAuth, BASE_URL }
+export { fetchWithAuth};

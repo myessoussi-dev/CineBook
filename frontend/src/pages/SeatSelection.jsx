@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useSessionSeats, useSessionDetails, fetchWithAuth, BASE_URL } from '../hooks/useMovies'
+import { useSessionSeats, useSessionDetails, fetchWithAuth } from '../hooks/useMovies'
 import { useAuth } from '../context/AuthContext'
 import LoginPromptModal from '../components/LoginPromptModal'
 
@@ -73,7 +73,7 @@ export default function SeatSelection() {
     setBooking(true)
     setBookError(null)
     try {
-      const res = await fetchWithAuth(`${BASE_URL}/api/reservations`, {
+      const res = await fetchWithAuth(`/api/reservations`, {
         method: 'POST',
         body: JSON.stringify({
           userId: user?.id,
