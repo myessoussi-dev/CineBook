@@ -4,10 +4,11 @@ import { useAuth } from '../context/AuthContext'
 
 
 // ─── OTP Screen ───────────────────────────────────────────────
-function OtpScreen({ email, onSuccess }) {
+function OtpScreen({ email, onSuccess, onClose }) {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
   const [countdown, setCountdown] = useState(30)
   const [canResend, setCanResend] = useState(false)
   const [resendCount, setResendCount] = useState(0)
@@ -60,11 +61,24 @@ function OtpScreen({ email, onSuccess }) {
         body: JSON.stringify({ email, otpCode: code }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.message || 'Code incorrect'); return }
-      onSuccess(data.token, data.user)
+      if (!res.ok) {
+        // Code faux : afficher l'erreur, puis reset après 1.5s
+        setError(data.message || 'Code incorrect')
+        setLoading(false)
+        setTimeout(() => {
+          setError(null)
+          setOtp(['', '', '', '', '', ''])
+          document.getElementById('otp-0')?.focus()
+        }, 1500)
+        return
+      }
+      // Code bon : animation succès, puis redirection
+      setSuccess(true)
+      setTimeout(() => {
+        onSuccess(data.token, data.user)
+      }, 1200)
     } catch {
       setError('Impossible de contacter le serveur')
-    } finally {
       setLoading(false)
     }
   }
@@ -96,8 +110,77 @@ function OtpScreen({ email, onSuccess }) {
   const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
   const filled = otp.every(d => d !== '')
 
+  // ── Écran succès ──
+  if (success) return (
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <style>{`
+        @keyframes popIn {
+          0%   { transform: scale(0.4); opacity: 0 }
+          70%  { transform: scale(1.15); opacity: 1 }
+          100% { transform: scale(1) }
+        }
+        @keyframes checkDraw {
+          from { stroke-dashoffset: 40 }
+          to   { stroke-dashoffset: 0 }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px) }
+          to   { opacity: 1; transform: translateY(0) }
+        }
+      `}</style>
+      <div style={{
+        width: 80, height: 80, borderRadius: '50%',
+        background: 'rgba(74,222,128,0.12)',
+        border: '2px solid #4ade80',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto 24px',
+        animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
+      }}>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"
+            style={{ strokeDasharray: 40, strokeDashoffset: 40, animation: 'checkDraw 0.4s ease 0.3s forwards' }} />
+        </svg>
+      </div>
+      <h2 style={{
+        fontFamily: 'var(--font-display)', fontSize: '24px', letterSpacing: '2px',
+        color: '#4ade80', marginBottom: '8px',
+        animation: 'fadeUp 0.4s ease 0.4s both',
+      }}>
+        CODE VALIDÉ
+      </h2>
+      <p style={{
+        fontSize: '13px', color: 'var(--text-muted)',
+        animation: 'fadeUp 0.4s ease 0.55s both',
+      }}>
+        Connexion en cours...
+      </p>
+    </div>
+  )
+
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div style={{ textAlign: 'center', position: 'relative' }}>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}`}</style>
+
+      {/* X button */}
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          position: 'absolute', top: '-8px', right: '-8px',
+          width: 32, height: 32, borderRadius: '50%',
+          border: '1px solid var(--border)',
+          background: 'var(--bg-card)',
+          color: 'var(--text-muted)',
+          fontSize: '18px', fontWeight: 400,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s', lineHeight: 1, padding: 0,
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+      >
+        ×
+      </button>
+
       {/* Icon */}
       <div style={{
         width: 64, height: 64, borderRadius: '50%',
@@ -115,7 +198,10 @@ function OtpScreen({ email, onSuccess }) {
       </p>
 
       {/* OTP inputs */}
-      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }} onPaste={handlePaste}>
+      <div
+        style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px', animation: error ? 'shake 0.4s ease' : 'none' }}
+        onPaste={handlePaste}
+      >
         {otp.map((digit, idx) => (
           <input
             key={idx}
@@ -130,7 +216,7 @@ function OtpScreen({ email, onSuccess }) {
               width: 46, height: 54,
               borderRadius: '10px',
               border: `2px solid ${error ? '#f87171' : digit ? 'var(--accent)' : 'var(--border)'}`,
-              background: digit ? 'rgba(232,160,32,0.08)' : 'var(--bg-card)',
+              background: error ? 'rgba(248,113,113,0.06)' : digit ? 'rgba(232,160,32,0.08)' : 'var(--bg-card)',
               color: 'var(--text-primary)',
               fontSize: '22px', fontWeight: 700,
               textAlign: 'center',
@@ -237,27 +323,23 @@ export default function AuthPage() {
 
     try {
       if (mode === 'register') {
-        // Register → backend renvoie token+user directement ou déclenche OTP
         const res = await fetch(`/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fullName: form.fullName, email: form.email, password: form.password }),
         })
         const data = await res.json().catch(() => ({}))
-        if (!res.ok) { setApiError(data.message || 'Erreur lors de l\'inscription'); return }
+        if (!res.ok) { setApiError(data.message || "Erreur lors de l'inscription"); return }
 
-        // Si le backend renvoie un OTP (pas de token) → afficher écran OTP
         if (!data.token) {
           setPendingEmail(form.email)
           setShowOtp(true)
           return
         }
-        // Si le backend renvoie directement token+user
         login(data.token, data.user)
         navigate(from, { replace: true })
 
       } else {
-        // Login normal
         const res = await fetch(`/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -289,47 +371,75 @@ export default function AuthPage() {
     navigate(m === 'login' ? '/login' : '/register', { replace: true })
   }
 
+  function handleClose() {
+    navigate(-1)
+  }
+
   return (
     <div
-      onClick={() => navigate(-1)}
       style={{
         minHeight: '100vh',
         background: 'rgba(0,0,0,0.75)',
         backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: 'var(--font-body)', padding: '20px',
-        position: 'relative', overflow: 'hidden', cursor: 'pointer',
+        position: 'relative', overflow: 'hidden',
       }}
     >
       <div style={{ position: 'fixed', top: '-200px', left: '-200px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,160,32,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'fixed', bottom: '-150px', right: '-150px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,160,32,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
+      {/* Modal card */}
       <div
-        onClick={e => e.stopPropagation()}
         style={{
           width: '100%', maxWidth: '420px',
           background: 'var(--bg-secondary)',
           borderRadius: '20px', border: '1px solid var(--border)',
           padding: '40px 36px',
           boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
-          animation: 'fadeIn 0.4s ease', cursor: 'default',
+          animation: 'fadeIn 0.4s ease',
+          position: 'relative',
         }}
       >
-        {/* Logo */}
-        <div onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '32px', justifyContent: 'center' }}>
-          <div style={{ width: 32, height: 32, borderRadius: '8px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, color: '#000' }}>C</div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: '20px', letterSpacing: '3px', color: 'var(--text-primary)' }}>CINÉBOOK</span>
-        </div>
-
         {/* OTP Screen */}
         {showOtp ? (
-          <OtpScreen email={pendingEmail} onSuccess={handleOtpSuccess} />
+          <OtpScreen
+            email={pendingEmail}
+            onSuccess={handleOtpSuccess}
+            onClose={handleClose}
+          />
         ) : (
           <>
+            {/* X button */}
+            <button
+              type="button"
+              onClick={handleClose}
+              style={{
+                position: 'absolute', top: '16px', right: '16px',
+                width: 32, height: 32, borderRadius: '50%',
+                border: '1px solid var(--border)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-muted)',
+                fontSize: '18px', fontWeight: 400,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s', lineHeight: 1, padding: 0,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+            >
+              ×
+            </button>
+
+            {/* Logo */}
+            <div onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '32px', justifyContent: 'center' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '8px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, color: '#000' }}>C</div>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '20px', letterSpacing: '3px', color: 'var(--text-primary)' }}>CINÉBOOK</span>
+            </div>
+
             {/* Tabs */}
             <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: '10px', padding: '4px', marginBottom: '28px', border: '1px solid var(--border)' }}>
               {[['login', 'Connexion'], ['register', 'Inscription']].map(([m, label]) => (
-                <button key={m} onClick={() => switchMode(m)} style={{
+                <button key={m} type="button" onClick={() => switchMode(m)} style={{
                   flex: 1, padding: '10px', borderRadius: '7px', border: 'none',
                   background: mode === m ? 'var(--accent)' : 'transparent',
                   color: mode === m ? '#000' : 'var(--text-muted)',

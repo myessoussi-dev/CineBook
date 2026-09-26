@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useSessionSeats, useSessionDetails, fetchWithAuth } from '../hooks/useMovies'
+import { useSessionSeats, useSessionDetails } from '../hooks/useMovies'
 import { useAuth } from '../context/AuthContext'
 import LoginPromptModal from '../components/LoginPromptModal'
 
@@ -17,7 +17,7 @@ export default function SeatSelection() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, clearAuth } = useAuth()
+  const { clearAuth } = useAuth()
 
   const movieFromState = location.state?.movie
 
@@ -25,14 +25,10 @@ export default function SeatSelection() {
   const { seats, reservedIds, loading: seatsLoading, authError: seatsAuthError } = useSessionSeats(sessionId)
 
   const [selectedSeats, setSelectedSeats] = useState([])
-  const [booking, setBooking] = useState(false)
-  const [booked, setBooked] = useState(false)
-  const [bookError, setBookError] = useState(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const movie = movieFromState
 
-  // ✅ useEffect pour gérer les erreurs auth
   useEffect(() => {
     if (sessAuthError || seatsAuthError) {
       clearAuth()
@@ -68,67 +64,16 @@ export default function SeatSelection() {
     ? (selectedSeats.length * parseFloat(session.price)).toFixed(2)
     : '0.00'
 
-  async function confirmBooking() {
+  function goToCheckout() {
     if (selectedSeats.length === 0) return
-    setBooking(true)
-    setBookError(null)
-    try {
-      const res = await fetchWithAuth(`/api/reservations`, {
-        method: 'POST',
-        body: JSON.stringify({
-          userId: user?.id,
-          sessionId: Number(sessionId),
-          seatIds: selectedSeats.map(s => s.id),
-          price:parseFloat(totalPrice)
-        }),
-      })
-      if (!res.ok) throw new Error('Erreur lors de la réservation')
-      setBooked(true)
-    } catch (err) {
-      if (err.isAuthError) {
-        clearAuth()
-        setShowAuthModal(true)
-      } else {
-        setBookError(err.message)
-      }
-    } finally {
-      setBooking(false)
-    }
+    navigate('/checkout', {
+      state: { movie, session, selectedSeats, totalPrice, sessionId }
+    })
   }
 
-  // Auth modal
   if (showAuthModal) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <LoginPromptModal onClose={() => navigate('/')} from={location.pathname} />
-    </div>
-  )
-
-  // Success screen
-  if (booked) return (
-    <div style={{
-      minHeight: '100vh', background: 'var(--bg-primary)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease',
-      fontFamily: 'var(--font-body)',
-    }}>
-      <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(74,222,128,0.12)', border: '2px solid #4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px' }}>✓</div>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '36px', letterSpacing: '2px', color: '#4ade80' }}>RÉSERVATION CONFIRMÉE</h2>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px 36px', display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '340px' }}>
-        {movie && <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{movie.title}</p>}
-        {session && (
-          <>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>📅 {formatDate(session.startTime)} à {formatTime(session.startTime)}</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>🎭 {session.room?.name}</p>
-          </>
-        )}
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>💺 Sièges : {selectedSeats.map(s => `${s.row}${s.column}`).join(', ')}</p>
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '4px' }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '24px', color: 'var(--accent)', letterSpacing: '1px' }}>Total : {totalPrice} TND</p>
-        </div>
-      </div>
-      <button onClick={() => navigate('/')} style={{ background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', padding: '12px 28px', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>
-        Retour à l'accueil
-      </button>
     </div>
   )
 
@@ -258,12 +203,11 @@ export default function SeatSelection() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          {bookError && <span style={{ fontSize: '12px', color: '#f87171', fontFamily: 'var(--font-mono)' }}>⚠ {bookError}</span>}
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', letterSpacing: '1px', marginBottom: '2px' }}>TOTAL</p>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '26px', color: 'var(--accent)', letterSpacing: '1px' }}>{totalPrice} TND</p>
           </div>
-          <button onClick={confirmBooking} disabled={selectedSeats.length === 0 || booking}
+          <button onClick={goToCheckout} disabled={selectedSeats.length === 0}
             style={{
               background: selectedSeats.length === 0 ? 'rgba(255,255,255,0.05)' : 'var(--accent)',
               color: selectedSeats.length === 0 ? 'var(--text-dim)' : '#000',
@@ -271,15 +215,13 @@ export default function SeatSelection() {
               fontSize: '14px', fontWeight: 700,
               cursor: selectedSeats.length === 0 ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s', fontFamily: 'var(--font-body)',
-              display: 'flex', alignItems: 'center', gap: '8px', opacity: booking ? 0.7 : 1,
+              display: 'flex', alignItems: 'center', gap: '8px',
             }}
-            onMouseEnter={e => { if (selectedSeats.length > 0 && !booking) e.currentTarget.style.boxShadow = '0 8px 28px rgba(232,160,32,0.35)' }}
+            onMouseEnter={e => { if (selectedSeats.length > 0) e.currentTarget.style.boxShadow = '0 8px 28px rgba(232,160,32,0.35)' }}
             onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
           >
-            {booking
-              ? <><div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.2)', borderTopColor: '#000', animation: 'spin 0.7s linear infinite' }} />Réservation...</>
-              : <>Confirmer — {selectedSeats.length} place{selectedSeats.length !== 1 ? 's' : ''}</>
-            }
+            Passer au paiement
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
