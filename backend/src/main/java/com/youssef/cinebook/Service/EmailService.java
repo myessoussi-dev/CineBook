@@ -21,175 +21,19 @@ public class EmailService {
 
     private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
     @Value("${MAIL}")
-    private String email;
+    private String mail;
     private static final String name = "CinéBook";
 
-    @Async
-    public void envoyerConfirmationReservation(
-            String destinataire,
-            String nomUtilisateur,
-            String film,
-            String posterPath,
-            String date,
-            String heure,
-            String salle,
-            String siegesBadges,  // ← déjà construit en HTML
-            String prix,
-            Long numeroReservation
-    ) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(email, name);
-            helper.setTo(destinataire);
-            helper.setSubject("🎬 Confirmation de votre réservation - " + film);
-            helper.setText(construireHtml(
-                    nomUtilisateur, film, date, heure, salle, siegesBadges, prix, numeroReservation
-            ), true);
-
-            String posterFullUrl = TMDB_IMAGE_BASE_URL + posterPath;
-            helper.addInline("poster", new UrlResource(new URI(posterFullUrl)));
-
-            mailSender.send(message);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'envoi du mail de confirmation", e);
-        }
-    }
-
-    private String construireHtml(
-            String nomUtilisateur,
-            String film,
-            String date,
-            String heure,
-            String salle,
-            String siegesBadges,
-            String prix,
-            Long numeroReservation
-    ) {
-        return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="UTF-8">
-              <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; margin: 0; padding: 0; }
-                .container { max-width: 600px; margin: 20px auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #2a2a2a; }
-                .header { background: linear-gradient(135deg, #1a1a1a 0%%, #2a2a2a 100%%); padding: 50px 30px; text-align: center; border-bottom: 3px solid #f4a000; }
-                .header h1 { margin: 0; font-size: 36px; font-weight: 800; color: #f4a000; letter-spacing: -1px; }
-                .header p { margin: 10px 0 0; color: #999; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
-                .poster { text-align: center; padding: 30px; background: #0f0f0f; }
-                .poster img { width: 150px; border-radius: 8px; box-shadow: 0 8px 24px rgba(244, 160, 0, 0.3); border: 2px solid #f4a000; }
-                .body { padding: 40px 30px; color: #ddd; }
-                .greeting { font-size: 16px; margin-bottom: 35px; line-height: 1.6; }
-                .greeting strong { color: #f4a000; font-weight: 700; }
-                .detail-box { background: #252525; border-radius: 8px; padding: 0; margin: 30px 0; overflow: hidden; border: 1px solid #333; }
-                .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
-                .detail-row:last-child { border-bottom: none; }
-                .detail-label { color: #999; font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-                .detail-value { color: #fff; font-weight: 600; }
-                .total-row { background: linear-gradient(90deg, #f4a000 0%%, #d99000 100%%); padding: 18px 20px !important; border-bottom: none !important; }
-                .total-label { color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px; }
-                .total-value { color: #000; font-size: 18px; font-weight: 800; }
-                .reservation-section { margin: 35px 0; }
-                .reservation-label { color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-                .reservation-num { background: #f4a000; color: #000; text-align: center; padding: 25px; border-radius: 8px; font-size: 24px; font-weight: 800; letter-spacing: 3px; box-shadow: 0 6px 20px rgba(244, 160, 0, 0.4); }
-                .info-section { background: #252525; border-left: 4px solid #f4a000; padding: 16px 18px; border-radius: 6px; font-size: 13px; color: #ccc; line-height: 1.8; margin-top: 30px; }
-                .info-section strong { color: #f4a000; }
-                .footer { background: #0f0f0f; color: #666; text-align: center; padding: 30px; font-size: 12px; border-top: 1px solid #2a2a2a; }
-                .footer a { color: #f4a000; text-decoration: none; font-weight: 600; }
-                .footer p { margin: 6px 0; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-
-                <div class="header">
-                  <h1>CinéBook</h1>
-                  <p>Confirmation de réservation</p>
-                </div>
-
-                <div class="poster">
-                  <img src="cid:poster" alt="Poster %s" />
-                </div>
-
-                <div class="body">
-                  <div class="greeting">
-                    Bonjour <strong>%s</strong>,<br>
-                    Votre réservation est <strong>confirmée</strong> !
-                  </div>
-
-                  <div class="detail-box">
-                    <div class="detail-row">
-                      <span class="detail-label">Film</span>
-                      <span class="detail-value">%s</span>
-                    </div>
-                    <div class="detail-row">
-                      <span class="detail-label">Date</span>
-                      <span class="detail-value">%s</span>
-                    </div>
-                    <div class="detail-row">
-                      <span class="detail-label">Séance</span>
-                      <span class="detail-value">%s</span>
-                    </div>
-                    <div class="detail-row">
-                      <span class="detail-label">Salle</span>
-                      <span class="detail-value">%s</span>
-                    </div>
-                    <div class="detail-row">
-                      <span class="detail-label">Siège(s)</span>
-                      <span class="detail-value">%s</span>
-                    </div>
-                    <div class="detail-row total-row">
-                      <span class="total-label">Total à payer</span>
-                      <span class="total-value">%s TND</span>
-                    </div>
-                  </div>
-
-                  <div class="reservation-section">
-                    <div class="reservation-label">Numéro de réservation</div>
-                    <div class="reservation-num">%s</div>
-                  </div>
-
-                  <div class="info-section">
-                    Présentez ce numéro ou ce mail à l'entrée. Arrivez <strong>10 minutes avant</strong> la séance pour un meilleur accueil.
-                  </div>
-                </div>
-
-                <div class="footer">
-                  <p>© 2026 CinéBook • <a href="#">Politique de confidentialité</a> • <a href="#">Support</a></p>
-                  <p style="color: #555; margin-top: 12px;">Cet email a été envoyé automatiquement.</p>
-                </div>
-
-              </div>
-            </body>
-            </html>
-        """.formatted(
-                film,               // alt poster
-                nomUtilisateur,     // Bonjour
-                film,               // nom film
-                date,               // date
-                heure,              // séance
-                salle,              // salle
-                siegesBadges,       // sièges
-                prix,               // total
-                numeroReservation   // numéro réservation
-        );
-    }
     @Async
     public void sendOtpEmail(String email, String otpCode) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(email, name);
+            helper.setFrom(mail, name);
             helper.setTo(email);
             helper.setSubject("🔐 Votre code de vérification CinéBook");
             helper.setText(buildOtpHtml(otpCode), true);
-
             mailSender.send(message);
-
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de l'envoi du mail OTP", e);
         }
@@ -199,70 +43,232 @@ public class EmailService {
         StringBuilder digits = new StringBuilder();
         for (char c : otpCode.toCharArray()) {
             digits.append("""
-            <span style="
-                display: inline-block;
-                width: 44px; height: 52px;
-                line-height: 52px;
-                text-align: center;
-                font-size: 26px;
-                font-weight: 700;
-                color: #111827;
-                background: #f9fafb;
-                border: 1.5px solid #e5e7eb;
-                border-radius: 8px;
-                margin: 0 3px;
-                font-family: monospace;
-            ">%c</span>
-        """.formatted(c));
+                <span style="
+                    display: inline-block;
+                    width: 36px;
+                    height: 44px;
+                    line-height: 44px;
+                    text-align: center;
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #111827;
+                    background: #f9fafb;
+                    border: 1.5px solid #e5e7eb;
+                    border-radius: 8px;
+                    margin: 0 3px;
+                    font-family: monospace;
+                ">%c</span>
+            """.formatted(c));
         }
 
         return """
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"></head>
-        <body style="margin:0; padding:0; background:#f3f4f6; font-family: Arial, sans-serif;">
-          <table width="100%%" cellpadding="0" cellspacing="0" style="padding: 48px 20px;">
-            <tr><td align="center">
-              <table width="480" cellpadding="0" cellspacing="0" style="
-                  background: #ffffff;
-                  border-radius: 12px;
-                  border: 1px solid #e5e7eb;
-                  max-width: 480px;
-                  width: 100%%;
-              ">
-                <tr>
-                  <td style="padding: 40px 48px 32px;">
-                    <p style="margin: 0 0 24px; font-size: 22px; font-weight: 700; color: #111827;">
-                      CinéBook
-                    </p>
-                    <p style="margin: 0 0 8px; font-size: 15px; color: #111827; font-weight: 600;">
-                      Vérifiez votre adresse email
-                    </p>
-                    <p style="margin: 0 0 28px; font-size: 14px; color: #6b7280; line-height: 1.6;">
-                      Entrez ce code pour confirmer votre compte. Il expire dans <strong>5 minutes</strong>.
-                    </p>
-
-                    <div style="text-align: center; margin-bottom: 28px;">
-                      %s
-                    </div>
-
-                    <p style="margin: 0; font-size: 13px; color: #9ca3af; line-height: 1.5;">
-                      Si vous n'avez pas créé de compte, ignorez cet email.
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 20px 48px; border-top: 1px solid #f3f4f6;">
-                    <p style="margin: 0; font-size: 12px; color: #d1d5db;">
-                      © 2026 CinéBook — Ne pas répondre à cet email.
-                    </p>
-                  </td>
-                </tr>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin:0; padding:0; background:#f3f4f6; font-family: Arial, sans-serif;">
+              <table width="100%%" cellpadding="0" cellspacing="0" style="padding: 48px 20px;">
+                <tr><td align="center">
+                  <table cellpadding="0" cellspacing="0" style="
+                      background: #ffffff;
+                      border-radius: 12px;
+                      border: 1px solid #e5e7eb;
+                      max-width: 480px;
+                      width: 100%%;
+                  ">
+                    <tr>
+                      <td style="padding: 40px 40px 32px;">
+                        <p style="margin: 0 0 24px; font-size: 22px; font-weight: 700; color: #111827;">
+                          CinéBook
+                        </p>
+                        <p style="margin: 0 0 8px; font-size: 15px; color: #111827; font-weight: 600;">
+                          Vérifiez votre adresse email
+                        </p>
+                        <p style="margin: 0 0 28px; font-size: 14px; color: #6b7280; line-height: 1.6;">
+                          Entrez ce code pour confirmer votre compte. Il expire dans <strong>5 minutes</strong>.
+                        </p>
+                        <!-- digits container: white-space:nowrap keeps all boxes on one line on mobile -->
+                        <div style="text-align: center; margin-bottom: 28px; white-space: nowrap;">
+                          %s
+                        </div>
+                        <p style="margin: 0; font-size: 13px; color: #9ca3af; line-height: 1.5;">
+                          Si vous n'avez pas créé de compte, ignorez cet email.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 20px 40px; border-top: 1px solid #f3f4f6;">
+                        <p style="margin: 0; font-size: 12px; color: #d1d5db;">
+                          © 2026 CinéBook — Ne pas répondre à cet email.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
               </table>
-            </td></tr>
-          </table>
-        </body>
-        </html>
-    """.formatted(digits.toString());
+            </body>
+            </html>
+        """.formatted(digits.toString());
+    }
+
+    // ─── Reservation Confirmation Email ───────────────────────────
+
+    @Async
+    public void sendConfirmationEmail(String email, String clientName, String movieTitle,
+                                      String posterPath, String sessionDate, String sessionTime,
+                                      String roomName, String seats, String totalPrice,
+                                      String numeroReservation) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(mail, name);
+            helper.setTo(email);
+            helper.setSubject("🎟 Votre réservation CinéBook — " + movieTitle);
+            helper.setText(buildConfirmationHtml(clientName, movieTitle, posterPath,
+                    sessionDate, sessionTime, roomName, seats, totalPrice,
+                    numeroReservation), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'envoi du mail de confirmation", e);
+        }
+    }
+
+    private String buildConfirmationHtml(String clientName, String movieTitle,
+                                         String posterPath, String sessionDate, String sessionTime,
+                                         String roomName, String seats, String totalPrice,
+                                         String numeroReservation) {
+        String posterBlock = (posterPath != null && !posterPath.isBlank())
+                ? "<img src=\"https://image.tmdb.org/t/p/w200" + posterPath + "\" alt=\"\" " +
+                "style=\"width:64px; height:96px; object-fit:cover; border-radius:6px; " +
+                "border:1px solid #e5e7eb; vertical-align:top;\" />"
+                : "";
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin:0; padding:0; background:#f3f4f6; font-family: Arial, sans-serif;">
+              <table width="100%%" cellpadding="0" cellspacing="0" style="padding: 48px 20px;">
+                <tr><td align="center">
+                  <table cellpadding="0" cellspacing="0" style="
+                      background: #ffffff;
+                      border-radius: 12px;
+                      border: 1px solid #e5e7eb;
+                      max-width: 480px;
+                      width: 100%%;
+                  ">
+ 
+                    <!-- Header -->
+                    <tr>
+                      <td style="padding: 40px 40px 28px;">
+                        <p style="margin: 0 0 24px; font-size: 22px; font-weight: 700; color: #111827;">
+                          CinéBook
+                        </p>
+                        <p style="margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #111827;">
+                          Réservation confirmée ✓
+                        </p>
+                        <p style="margin: 0; font-size: 14px; color: #6b7280; line-height: 1.6;">
+                          Bonjour <strong>%s</strong>, votre place est réservée. À tout à l'heure au cinéma&nbsp;!
+                        </p>
+                      </td>
+                    </tr>
+ 
+                    <!-- Divider -->
+                    <tr><td style="padding: 0 40px;"><div style="height:1px; background:#f3f4f6;"></div></td></tr>
+ 
+                    <!-- Film row: poster + title/infos -->
+                    <tr>
+                      <td style="padding: 28px 40px 20px;">
+                        <table width="100%%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <!-- Poster -->
+                            <td style="width: 72px; vertical-align: top; padding-right: 18px;">
+                              %s
+                            </td>
+                            <!-- Film details -->
+                            <td style="vertical-align: top;">
+                              <p style="margin: 0 0 3px; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Film</p>
+                              <p style="margin: 0 0 14px; font-size: 16px; font-weight: 700; color: #111827;">%s</p>
+ 
+                              <table width="100%%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td style="padding-bottom: 10px; width: 50%%;">
+                                    <p style="margin: 0 0 2px; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Date</p>
+                                    <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">%s</p>
+                                  </td>
+                                  <td style="padding-bottom: 10px; width: 50%%;">
+                                    <p style="margin: 0 0 2px; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Heure</p>
+                                    <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">%s</p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="width: 50%%;">
+                                    <p style="margin: 0 0 2px; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Salle</p>
+                                    <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">%s</p>
+                                  </td>
+                                  <td style="width: 50%%;">
+                                    <p style="margin: 0 0 2px; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Siège(s)</p>
+                                    <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">%s</p>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+ 
+                    <!-- Total + numéro de réservation -->
+                    <tr>
+                      <td style="padding: 0 40px 28px;">
+                        <table width="100%%" cellpadding="0" cellspacing="0" style="
+                          background: #f9fafb;
+                          border: 1px solid #e5e7eb;
+                          border-radius: 8px;
+                        ">
+                          <tr>
+                            <td style="padding: 14px 18px; border-bottom: 1px solid #e5e7eb;">
+                              <table width="100%%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td><p style="margin:0; font-size:13px; color:#6b7280;">Total payé</p></td>
+                                  <td align="right"><p style="margin:0; font-size:16px; font-weight:700; color:#111827;">%s&nbsp;TND</p></td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 12px 18px;">
+                              <table width="100%%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td><p style="margin:0; font-size:12px; color:#9ca3af;">Numéro de réservation</p></td>
+                                  <td align="right"><p style="margin:0; font-size:12px; font-weight:600; color:#374151; font-family: monospace; letter-spacing: 0.5px;">%s</p></td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+ 
+                    <!-- Footer -->
+                    <tr>
+                      <td style="padding: 20px 40px; border-top: 1px solid #f3f4f6;">
+                        <p style="margin: 0; font-size: 12px; color: #d1d5db; line-height: 1.5;">
+                          © 2026 CinéBook — Présentez cette confirmation à l'entrée. Ne pas répondre à cet email.
+                        </p>
+                      </td>
+                    </tr>
+ 
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+        """.formatted(clientName, posterBlock, movieTitle, sessionDate, sessionTime,
+                roomName, seats, totalPrice, numeroReservation);
     }
 }

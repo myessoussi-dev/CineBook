@@ -5,7 +5,6 @@ import com.youssef.cinebook.DTO.PendingUser;
 import com.youssef.cinebook.DTO.RegisterRequest;
 import com.youssef.cinebook.Entity.User;
 import com.youssef.cinebook.Repository.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
