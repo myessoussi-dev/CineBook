@@ -34,7 +34,7 @@ public class AuthService {
         return userRepository.save(user);
     }
     public User loginUser(LoginRequest loginRequest){
-        User user=userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()->
+        User user=userRepository.findByEmail(loginRequest.getEmail().toLowerCase().trim()).orElseThrow(()->
                 new RuntimeException("user not found"));
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
             throw new RuntimeException("Wrong password");
@@ -43,12 +43,12 @@ public class AuthService {
     }
 
     public void registerRequest(RegisterRequest registerRequest) {
-        if (userRepository.existsByEmail(registerRequest.getEmail())){
-            throw new RuntimeException("Account alredy exists !!");
+        if (userRepository.existsByEmail(registerRequest.getEmail().toLowerCase().trim())){
+            throw new RuntimeException("Account already exists !!");
         }
         PendingUser pendingUser= PendingUser.builder().
                 fullName(registerRequest.getFullName()).
-                email(registerRequest.getEmail()).
+                email(registerRequest.getEmail().toLowerCase().trim()).
                 password(passwordEncoder.encode(registerRequest.getPassword())).
                 build();
         String otpCode=otpService.savePendingUser(pendingUser);

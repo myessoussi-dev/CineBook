@@ -175,7 +175,7 @@ export default function CheckoutPage() {
               <CardField label="Numéro de carte" placeholder="1234 5678 9012 3456"
                 value={cardNumber} onChange={v => setCardNumber(formatCardNumber(v))}
                 icon={<CardIcon />} />
-              <CardField label="Nom du titulaire" placeholder="Jean Dupont"
+              <CardField label="Nom du titulaire" placeholder="Cardholder Name"
                 value={cardName} onChange={v => setCardName(v.toUpperCase())}
                 icon={<UserIcon />} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -183,7 +183,7 @@ export default function CheckoutPage() {
                   value={expiry} onChange={v => setExpiry(formatExpiry(v))}
                   icon={<CalIcon />} />
                 <CardField label="CVV" placeholder="•••"
-                  value={cvv} onChange={v => setCvv(v.replace(/\D/g, '').slice(0, 4))}
+                  value={cvv} onChange={v => setCvv(v.replace(/\D/g, '').slice(0, 3))}
                   icon={<LockIcon />} type="password" />
               </div>
             </div>

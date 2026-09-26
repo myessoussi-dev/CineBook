@@ -17,7 +17,8 @@ public class OtpService {
         this.objectMapper = objectMapper;
     }
     public boolean isCoolDownActive(String email){
-        String key="otp_cooldown:"+email.toLowerCase().trim();
+        String cleanEmail = email.toLowerCase().trim();
+        String key="otp_cooldown:"+cleanEmail;
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
     public String generateOtpCode(String email){
@@ -31,19 +32,20 @@ public class OtpService {
         return otpCode;
     }
     public String savePendingUser(PendingUser pendingUser){
-        String email=pendingUser.getEmail().trim();
+        String cleanEmail =pendingUser.getEmail().toLowerCase().trim();
         String userJson=objectMapper.writeValueAsString(pendingUser);
-        String userKey="pending_user:" + email;
+        String userKey="pending_user:" + cleanEmail;
         redisTemplate.opsForValue().set(userKey,userJson, Duration.ofMinutes(15));
         return generateOtpCode(pendingUser.getEmail());
     }
     public String regenerateOtpCode(String email){
-        String userKey="pending_user:"+email;
+        String cleanEmail=email.toLowerCase().trim();
+        String userKey="pending_user:"+cleanEmail;
         Boolean userExists=redisTemplate.hasKey(userKey);
         if(Boolean.FALSE.equals(userExists)){
             return null;
         }
-        return generateOtpCode(email);
+        return generateOtpCode(cleanEmail);
     }
     public boolean validateOtp(String email, String submittedCode) {
         String cleanEmail = email.toLowerCase().trim();
@@ -56,7 +58,7 @@ public class OtpService {
         return storedOtp.equals(submittedCode);
     }
     public PendingUser getPendingUser(String email){
-        String userKey="pending_user:"+email;
+        String userKey="pending_user:"+email.toLowerCase().trim();
         String userJson=redisTemplate.opsForValue().get(userKey);
         if(userJson == null){
             return null;
@@ -64,9 +66,10 @@ public class OtpService {
         return objectMapper.readValue(userJson, PendingUser.class);
     }
     public void clearRedisKeys(String email) {
-        redisTemplate.delete("otp:" + email);
-        redisTemplate.delete("pending_user:" + email);
-        redisTemplate.delete("otp_cooldown:" + email);
+        String cleanEmail=email.toLowerCase().trim();
+        redisTemplate.delete("otp:" + cleanEmail);
+        redisTemplate.delete("pending_user:" + cleanEmail);
+        redisTemplate.delete("otp_cooldown:" + cleanEmail);
     }
 
 

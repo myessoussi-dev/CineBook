@@ -57,7 +57,7 @@ public class AuthController {
                             "\"La session d'inscription a expiré. Veuillez remplir à nouveau le formulaire.\""));
         }
         if (!isValid){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Error","INVALID_OTP"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message","INVALID_OTP"));
         }
         otpService.clearRedisKeys(otpRequest.getEmail());
         return ResponseEntity.ok(generateResponse(authService.registerUser(pendingUser)));
@@ -68,18 +68,17 @@ public class AuthController {
             authService.registerRequest(registerRequest);
             return ResponseEntity.ok("OTP sent successfully");
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("Error",e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message",e.getMessage()));
         }
     }
     @PostMapping("/resend-otp")
     public ResponseEntity<?> resendOtp(@RequestBody OtpRequest otpRequest){
-        PendingUser pendingUser=otpService.getPendingUser(otpRequest.getEmail());
         if (otpService.isCoolDownActive(otpRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("message","too many request"));
         }
         String newOtp=otpService.regenerateOtpCode(otpRequest.getEmail());
         if (newOtp==null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Error","SESSION_EXPIRED"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message","SESSION_EXPIRED"));
         }
         emailService.sendOtpEmail(otpRequest.getEmail(), newOtp);
         return ResponseEntity.ok(Map.of(
