@@ -173,7 +173,7 @@ export default function HeroSection({ movies }) {
         {/* CTAs */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button
-            onClick={() => navigate(`/api/movies/${current.id}`)}
+            onClick={() => navigate(`/movies/${current.id}`)}
             style={{
               background: 'var(--accent)',
               color: '#000',
@@ -197,7 +197,7 @@ export default function HeroSection({ movies }) {
             Réserver maintenant
           </button>
           <button
-            onClick={() => navigate(`/api/movies/${current.id}`)}
+            onClick={() => navigate(`/movies/${current.id}`)}
             style={{
               background: 'rgba(255,255,255,0.07)',
               color: 'var(--text-primary)',
