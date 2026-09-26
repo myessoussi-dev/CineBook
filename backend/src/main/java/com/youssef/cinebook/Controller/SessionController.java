@@ -32,5 +32,8 @@ public class SessionController {
     public List<SeatDTO> getReservedSeats(@PathVariable Long id){
         return sessionService.getReservedSeats(id);
     }
-
+    @GetMapping("/movies")
+    public List<Session> getAvailableSessions(){
+        return sessionService.getAvailableSessions();
+    }
 }

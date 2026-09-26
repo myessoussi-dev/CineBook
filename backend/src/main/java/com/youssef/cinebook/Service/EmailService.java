@@ -177,4 +177,92 @@ public class EmailService {
                 numeroReservation   // numéro réservation
         );
     }
+    @Async
+    public void sendOtpEmail(String email, String otpCode) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(email, name);
+            helper.setTo(email);
+            helper.setSubject("🔐 Votre code de vérification CinéBook");
+            helper.setText(buildOtpHtml(otpCode), true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'envoi du mail OTP", e);
+        }
+    }
+
+    private String buildOtpHtml(String otpCode) {
+        StringBuilder digits = new StringBuilder();
+        for (char c : otpCode.toCharArray()) {
+            digits.append("""
+            <span style="
+                display: inline-block;
+                width: 44px; height: 52px;
+                line-height: 52px;
+                text-align: center;
+                font-size: 26px;
+                font-weight: 700;
+                color: #111827;
+                background: #f9fafb;
+                border: 1.5px solid #e5e7eb;
+                border-radius: 8px;
+                margin: 0 3px;
+                font-family: monospace;
+            ">%c</span>
+        """.formatted(c));
+        }
+
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="margin:0; padding:0; background:#f3f4f6; font-family: Arial, sans-serif;">
+          <table width="100%%" cellpadding="0" cellspacing="0" style="padding: 48px 20px;">
+            <tr><td align="center">
+              <table width="480" cellpadding="0" cellspacing="0" style="
+                  background: #ffffff;
+                  border-radius: 12px;
+                  border: 1px solid #e5e7eb;
+                  max-width: 480px;
+                  width: 100%%;
+              ">
+                <tr>
+                  <td style="padding: 40px 48px 32px;">
+                    <p style="margin: 0 0 24px; font-size: 22px; font-weight: 700; color: #111827;">
+                      CinéBook
+                    </p>
+                    <p style="margin: 0 0 8px; font-size: 15px; color: #111827; font-weight: 600;">
+                      Vérifiez votre adresse email
+                    </p>
+                    <p style="margin: 0 0 28px; font-size: 14px; color: #6b7280; line-height: 1.6;">
+                      Entrez ce code pour confirmer votre compte. Il expire dans <strong>5 minutes</strong>.
+                    </p>
+
+                    <div style="text-align: center; margin-bottom: 28px;">
+                      %s
+                    </div>
+
+                    <p style="margin: 0; font-size: 13px; color: #9ca3af; line-height: 1.5;">
+                      Si vous n'avez pas créé de compte, ignorez cet email.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px 48px; border-top: 1px solid #f3f4f6;">
+                    <p style="margin: 0; font-size: 12px; color: #d1d5db;">
+                      © 2026 CinéBook — Ne pas répondre à cet email.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+        </body>
+        </html>
+    """.formatted(digits.toString());
+    }
 }

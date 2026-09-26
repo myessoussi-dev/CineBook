@@ -1,8 +1,8 @@
 package com.youssef.cinebook.Service;
 
 import com.youssef.cinebook.DTO.SeatDTO;
+import com.youssef.cinebook.Entity.Movie;
 import com.youssef.cinebook.Entity.ReservationSeat;
-import com.youssef.cinebook.Entity.Seat;
 import com.youssef.cinebook.Entity.Session;
 import com.youssef.cinebook.Mapper.SeatMapper;
 import com.youssef.cinebook.Repository.ReservationSeatRepository;
@@ -10,6 +10,7 @@ import com.youssef.cinebook.Repository.SeatRepository;
 import com.youssef.cinebook.Repository.SessionRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,5 +44,9 @@ public class SessionService {
                 map(ReservationSeat::getSeat)
                 .map(SeatMapper::SeatToDTO).toList();
 
+    }
+
+    public List<Session> getAvailableSessions() {
+        return sessionRepository.findByMovieStatusAndStartTimeGreaterThanEqual(Movie.MovieStatus.AVAILABLE, LocalDateTime.now());
     }
 }
