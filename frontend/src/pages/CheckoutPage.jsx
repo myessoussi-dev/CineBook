@@ -42,7 +42,7 @@ export default function CheckoutPage() {
   }
 
   const isCardFilled = cardNumber.replace(/\s/g, '').length === 16 && cardName && expiry.length === 5 && cvv.length >= 3
-  
+
   async function handlePay() {
     if (!isCardFilled) return
     setLoading(true)
@@ -97,6 +97,18 @@ export default function CheckoutPage() {
         </button>
 
         {/* Steps indicator */}
+        {/* Bandeau demo */}
+        <div style={{
+          background: 'rgba(232,160,32,0.08)', border: '1px solid rgba(232,160,32,0.25)',
+          borderRadius: '10px', padding: '10px 16px', marginBottom: '28px',
+          display: 'flex', alignItems: 'center', gap: '10px',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', lineHeight: 1.5 }}>
+            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Mode démonstration</span> — Entrez n'importe quelles données, aucun paiement réel n'est effectué.
+          </p>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
           {[['1', 'Sièges', true], ['2', 'Paiement', true], ['3', 'Confirmation', false]].map(([num, label, done], i) => (
             <div key={num} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
