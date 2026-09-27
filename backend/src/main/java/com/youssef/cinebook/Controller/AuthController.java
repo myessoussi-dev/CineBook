@@ -54,7 +54,7 @@ public class AuthController {
         if(pendingUser==null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(Map.of("Error","SESSION_EXPIRED","message",
-                            "\"La session d'inscription a expiré. Veuillez remplir à nouveau le formulaire.\""));
+                            "\"The registration session has expired. Please fill out the form again.\""));
         }
         if (!isValid){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message","INVALID_OTP"));
@@ -82,7 +82,7 @@ public class AuthController {
         }
         emailService.sendOtpEmail(otpRequest.getEmail(), newOtp);
         return ResponseEntity.ok(Map.of(
-                "message", "Un nouveau code OTP a été envoyé.",
+                "message", "New code otp was sent !.",
                 "cooldownSeconds", 30
         ));
 
