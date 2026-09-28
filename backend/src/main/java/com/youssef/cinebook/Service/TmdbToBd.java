@@ -11,6 +11,8 @@ import com.youssef.cinebook.Mapper.MovieMapper;
 import com.youssef.cinebook.Repository.CategoryRepository;
 import com.youssef.cinebook.Repository.MovieRepository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +68,11 @@ public class TmdbToBd {
             movies.add(movie);
         }
         movieRepository.saveAll(movies);
+    }
+    @Scheduled(cron = "0 0 5 * * *")
+    @CacheEvict(value = "homeMovies", allEntries = true)
+    public void syncNowPlayingMovies() {
+        addNowPlayingMovies(1);
     }
     public void addNowPlayingMovies(int p) {
         Set<Long> movieIds = tmdbClient.getNowPlaying(p);

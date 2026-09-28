@@ -66,7 +66,7 @@ public class DataInitializer implements ApplicationRunner {
         }
 
         if (args.containsOption("init-now-playing")) {
-            tmdbToBd.addNowPlayingMovies(1);
+            tmdbToBd.syncNowPlayingMovies();
             System.out.println("Les films à l'affiche ont été mis à jour avec succès !");
         }
 
