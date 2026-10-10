@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Mail } from 'lucide-react';
+
 
 // ─── OTP Screen ───────────────────────────────────────────────
 function OtpScreen({ email, onSuccess, onClose }) {
@@ -182,15 +182,12 @@ function OtpScreen({ email, onSuccess, onClose }) {
       </button>
 
       {/* Icon */}
-        <div style={{
-          width: 64, height: 64, borderRadius: '50%',
-          background: 'rgba(232,160,32,0.1)',
-          border: '1px solid rgba(232,160,32,0.25)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 20px',
-        }}>
-          <Mail size={28} color="#E8A020" strokeWidth={1.8} />
-        </div>
+      <div style={{
+        width: 64, height: 64, borderRadius: '50%',
+        background: 'rgba(232,160,32,0.1)', border: '1px solid rgba(232,160,32,0.25)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto 20px', fontSize: '28px',
+      }}>📧</div>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '26px', letterSpacing: '2px', color: 'var(--text-primary)', marginBottom: '8px' }}>
         VÉRIFICATION

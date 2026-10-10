@@ -19,7 +19,7 @@ export default function LoginPromptModal({ onClose, from }) {
           textAlign: 'center',
         }}
       >
-        {/* Icons */}
+        {/* Icon */}
         <div style={{
           width: 60, height: 60, borderRadius: '50%',
           background: 'rgba(232,160,32,0.1)', border: '1px solid rgba(232,160,32,0.2)',
