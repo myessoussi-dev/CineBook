@@ -10,6 +10,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cinebook_db
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_MAIL_PORT=2525
     depends_on:
       redis:
         condition: service_started
