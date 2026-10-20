@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
@@ -7,6 +8,13 @@ import SeancesPage from './pages/SeancesPage'
 import CheckoutPage from './pages/CheckoutPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
 
+// Remonte en haut de page à chaque changement de route
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [pathname])
+  return null
+}
+
 export default function App() {
   const location = useLocation()
   const hideNav = ['/login', '/register'].includes(location.pathname)
@@ -14,6 +22,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
       {!hideNav && <Navbar />}
       <Routes>
         <Route path="/login" element={<AuthPage />} />

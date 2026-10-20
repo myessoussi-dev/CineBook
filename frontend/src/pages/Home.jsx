@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react'
-import { useParams, useRoutes, useNavigate } from 'react-router-dom'
+import { useParams, useRoutes } from 'react-router-dom'
 import { useMovies, useMovieById } from '../hooks/useMovies'
 import HeroSection from '../components/HeroSection'
 import MovieCard from '../components/MovieCard'
 import MovieDetail from '../components/MovieDetail'
+import Footer from '../components/Footer'
+import Icon from '../components/Icon'
+import './Home.css'
 
 // ──────────────────────────────────────────────
 // Movie List View
@@ -36,194 +39,107 @@ function MovieListView({ movies, loading, error }) {
     return list
   }, [movies, activeGenre, sortBy, searchQuery])
 
+  function resetFilters() {
+    setSearchQuery('')
+    setActiveGenre('Tous')
+  }
+
   if (error) return (
-    <div style={{ textAlign: 'center', padding: '120px 40px' }}>
-      <span style={{ fontSize: '48px' }}>📡</span>
-      <p style={{ marginTop: '16px', color: 'var(--text-muted)' }}>
-        Impossible de charger les films.<br />
-        <span style={{ fontSize: '13px', color: 'var(--text-dim)' }}>{error}</span>
-      </p>
+    <div className="state state-full">
+      <div className="state-icon"><Icon name="wifi-off" size={26} /></div>
+      <h2>Impossible de charger les films</h2>
+      <p>Le serveur ne répond pas. Vérifiez votre connexion puis rechargez la page.</p>
+      <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Recharger la page</button>
+      <p className="dim" style={{ fontSize: 'var(--fs-xs)' }}>{error}</p>
     </div>
   )
 
   return (
     <>
-      {/* Hero */}
       {loading ? (
-        <div style={{ height: '100vh', background: 'linear-gradient(to bottom, #0d1117, var(--bg-primary))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%',
-              border: '3px solid rgba(255,255,255,0.08)',
-              borderTopColor: 'var(--accent)',
-              animation: 'spin 0.8s linear infinite',
-              margin: '0 auto 16px',
-            }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-            <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
-              Chargement des films...
-            </p>
+        <div className="hero-skeleton">
+          <div className="container hero-skeleton-inner">
+            <div className="skeleton" style={{ width: 160, height: 16 }} />
+            <div className="skeleton" style={{ width: 'min(560px, 90%)', height: 72 }} />
+            <div className="skeleton" style={{ width: 'min(420px, 70%)', height: 16 }} />
+            <div className="skeleton" style={{ width: 220, height: 52, borderRadius: 'var(--r-md)' }} />
           </div>
         </div>
       ) : (
         <HeroSection movies={movies} />
       )}
 
-      {/* Catalog section */}
-      <section style={{ padding: '60px 40px 80px', maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Section header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          marginBottom: '32px',
-          gap: '20px',
-          flexWrap: 'wrap',
-        }}>
+      <section className="catalog container" aria-labelledby="catalog-title">
+        <div className="catalog-head">
           <div>
-            <p style={{ fontSize: '11px', color: 'var(--accent)', fontFamily: 'var(--font-mono)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '6px' }}>
-              Catalogue
-            </p>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '40px', letterSpacing: '3px', color: 'var(--text-primary)' }}>
-              TOUS LES FILMS
-            </h2>
+            <h2 id="catalog-title" className="catalog-title display">À l'affiche</h2>
+            {!loading && (
+              <p className="catalog-count">
+                {filtered.length} film{filtered.length !== 1 ? 's' : ''}
+                {activeGenre !== 'Tous' && ` en ${activeGenre.toLowerCase()}`}
+              </p>
+            )}
           </div>
 
-          {/* Search + sort */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <div style={{ position: 'relative' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" strokeWidth="2"
-                style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
+          <div className="catalog-tools">
+            <label className="search">
+              <Icon name="search" size={17} />
+              <span className="visually-hidden">Rechercher un film</span>
               <input
-                type="text"
-                placeholder="Rechercher un film..."
+                type="search"
+                placeholder="Rechercher un film"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  padding: '9px 14px 9px 36px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  outline: 'none',
-                  width: '220px',
-                  fontFamily: 'var(--font-body)',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                onBlur={e => e.target.style.borderColor = 'var(--border)'}
               />
-            </div>
+            </label>
 
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                padding: '9px 14px',
-                color: 'var(--text-muted)',
-                fontSize: '13px',
-                outline: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-              }}
-            >
-              <option value="popularity">Popularité</option>
-              <option value="rating">Note</option>
-              <option value="date">Date de sortie</option>
-            </select>
+            <label className="sort">
+              <span className="visually-hidden">Trier par</span>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                <option value="popularity">Les plus populaires</option>
+                <option value="rating">Les mieux notés</option>
+                <option value="date">Les plus récents</option>
+              </select>
+              <Icon name="chevron-down" size={16} />
+            </label>
           </div>
         </div>
 
-        {/* Genre pills */}
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap',
-          marginBottom: '36px',
-          paddingBottom: '20px',
-          borderBottom: '1px solid var(--border)',
-        }}>
+        <div className="genre-bar scroll-x" role="group" aria-label="Filtrer par genre">
           {genres.map(g => (
-            <button
-              key={g}
-              onClick={() => setActiveGenre(g)}
-              style={{
-                padding: '7px 18px',
-                borderRadius: '20px',
-                border: `1px solid ${activeGenre === g ? 'var(--accent)' : 'var(--border)'}`,
-                background: activeGenre === g ? 'rgba(232,160,32,0.12)' : 'transparent',
-                color: activeGenre === g ? 'var(--accent)' : 'var(--text-muted)',
-                fontSize: '13px',
-                fontWeight: activeGenre === g ? 600 : 400,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                letterSpacing: '0.3px',
-              }}
-              onMouseEnter={e => { if (activeGenre !== g) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)' }}
-              onMouseLeave={e => { if (activeGenre !== g) e.currentTarget.style.borderColor = 'var(--border)' }}
-            >
+            <button key={g} type="button" className="chip" aria-pressed={activeGenre === g} onClick={() => setActiveGenre(g)}>
               {g}
             </button>
           ))}
         </div>
 
-        {/* Results count */}
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-dim)', marginBottom: '24px', letterSpacing: '0.5px' }}>
-          {filtered.length} film{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}
-        </p>
-
-        {/* Movie grid */}
         {loading ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: '20px',
-          }}>
+          <div className="movie-grid">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="skeleton" style={{ aspectRatio: '2/3', borderRadius: 'var(--radius-lg)' }} />
+              <div key={i}>
+                <div className="skeleton" style={{ aspectRatio: '2/3', borderRadius: 'var(--r-md)' }} />
+                <div className="skeleton" style={{ height: 14, width: '80%', marginTop: 12 }} />
+                <div className="skeleton" style={{ height: 12, width: '50%', marginTop: 8 }} />
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0' }}>
-            <p style={{ fontSize: '48px', marginBottom: '16px' }}>🎭</p>
-            <p style={{ color: 'var(--text-muted)' }}>Aucun film trouvé pour cette recherche.</p>
+          <div className="state">
+            <div className="state-icon"><Icon name="search" size={24} /></div>
+            <h2>Aucun film ne correspond</h2>
+            <p>Essayez un autre titre ou retirez le filtre de genre.</p>
+            <button type="button" className="btn btn-ghost" onClick={resetFilters}>Effacer les filtres</button>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: '20px',
-          }}>
-            {filtered.map((movie, i) => (
-              <MovieCard key={movie.id} movie={movie} index={i} />
+          <div className="movie-grid">
+            {filtered.map(movie => (
+              <MovieCard key={movie.id} movie={movie} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Footer */}
-      <footer style={{
-        borderTop: '1px solid var(--border)',
-        padding: '32px 40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        color: 'var(--text-dim)',
-        fontSize: '12px',
-        fontFamily: 'var(--font-mono)',
-      }}>
-        <span style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)', fontSize: '18px', letterSpacing: '2px' }}>
-          CINÉBOOK
-        </span>
-        <span>© {new Date().getFullYear()} — Tous droits réservés</span>
-        <span>Powered by TMDB</span>
-      </footer>
+      <Footer />
     </>
   )
 }
@@ -234,7 +150,12 @@ function MovieListView({ movies, loading, error }) {
 function MovieDetailView() {
   const { id } = useParams()
   const { movie, loading, error } = useMovieById(id)
-  return <MovieDetail movie={movie} loading={loading} error={error} />
+  return (
+    <>
+      <MovieDetail movie={movie} loading={loading} error={error} />
+      {!loading && movie && <Footer />}
+    </>
+  )
 }
 
 // ──────────────────────────────────────────────

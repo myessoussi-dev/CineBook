@@ -1,28 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useMovies } from '../hooks/useMovies'
+import Logo from '../components/Logo'
+import Icon from '../components/Icon'
+import './AuthPage.css'
 
+const TMDB = 'https://image.tmdb.org/t/p/'
 
 // ─── OTP Screen ───────────────────────────────────────────────
-function OtpScreen({ email, onSuccess, onClose }) {
+function OtpScreen({ email, onSuccess, onBack }) {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
   const [countdown, setCountdown] = useState(30)
-  const [canResend, setCanResend] = useState(false)
   const [resendCount, setResendCount] = useState(0)
+  const canResend = countdown <= 0
 
-  // Countdown timer
-  useState(() => {
-    const interval = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) { setCanResend(true); clearInterval(interval); return 0 }
-        return c - 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
-  })
+  // Compte à rebours avant de pouvoir renvoyer le code
+  useEffect(() => {
+    if (countdown <= 0) return
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [countdown])
+
+  useEffect(() => { document.getElementById('otp-0')?.focus() }, [])
 
   function handleOtpChange(idx, val) {
     if (!/^\d*$/.test(val)) return
@@ -44,14 +47,16 @@ function OtpScreen({ email, onSuccess, onClose }) {
   function handlePaste(e) {
     const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
     if (paste.length === 6) {
+      e.preventDefault()
       setOtp(paste.split(''))
       document.getElementById('otp-5')?.focus()
     }
   }
 
-  async function handleVerify() {
+  async function handleVerify(e) {
+    e?.preventDefault()
     const code = otp.join('')
-    if (code.length < 6) { setError('Entrez les 6 chiffres du code'); return }
+    if (code.length < 6) { setError('Saisissez les 6 chiffres du code.'); return }
     setLoading(true)
     setError(null)
     try {
@@ -63,7 +68,7 @@ function OtpScreen({ email, onSuccess, onClose }) {
       const data = await res.json()
       if (!res.ok) {
         // Code faux : afficher l'erreur, puis reset après 1.5s
-        setError(data.message || 'Code incorrect')
+        setError(data.message || 'Code incorrect. Vérifiez le dernier email reçu.')
         setLoading(false)
         setTimeout(() => {
           setError(null)
@@ -78,25 +83,17 @@ function OtpScreen({ email, onSuccess, onClose }) {
         onSuccess(data.token, data.user)
       }, 1200)
     } catch {
-      setError('Impossible de contacter le serveur')
+      setError('Le serveur ne répond pas. Réessayez dans un instant.')
       setLoading(false)
     }
   }
 
   async function handleResend() {
     if (!canResend) return
-    setCanResend(false)
     setResendCount(c => c + 1)
-    const newCountdown = resendCount >= 1 ? 60 : 30
-    setCountdown(newCountdown)
+    setCountdown(resendCount >= 1 ? 60 : 30)
     setOtp(['', '', '', '', '', ''])
     setError(null)
-    const interval = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) { setCanResend(true); clearInterval(interval); return 0 }
-        return c - 1
-      })
-    }, 1000)
     try {
       await fetch(`/auth/resend-otp`, {
         method: 'POST',
@@ -112,168 +109,63 @@ function OtpScreen({ email, onSuccess, onClose }) {
 
   // ── Écran succès ──
   if (success) return (
-    <div style={{ textAlign: 'center', padding: '20px 0' }}>
-      <style>{`
-        @keyframes popIn {
-          0%   { transform: scale(0.4); opacity: 0 }
-          70%  { transform: scale(1.15); opacity: 1 }
-          100% { transform: scale(1) }
-        }
-        @keyframes checkDraw {
-          from { stroke-dashoffset: 40 }
-          to   { stroke-dashoffset: 0 }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px) }
-          to   { opacity: 1; transform: translateY(0) }
-        }
-      `}</style>
-      <div style={{
-        width: 80, height: 80, borderRadius: '50%',
-        background: 'rgba(74,222,128,0.12)',
-        border: '2px solid #4ade80',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 24px',
-        animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
-      }}>
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12"
-            style={{ strokeDasharray: 40, strokeDashoffset: 40, animation: 'checkDraw 0.4s ease 0.3s forwards' }} />
+    <div className="otp-success">
+      <div className="confirm-check" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" pathLength="1" className="confirm-check-path" />
         </svg>
       </div>
-      <h2 style={{
-        fontFamily: 'var(--font-display)', fontSize: '24px', letterSpacing: '2px',
-        color: '#4ade80', marginBottom: '8px',
-        animation: 'fadeUp 0.4s ease 0.4s both',
-      }}>
-        CODE VALIDÉ
-      </h2>
-      <p style={{
-        fontSize: '13px', color: 'var(--text-muted)',
-        animation: 'fadeUp 0.4s ease 0.55s both',
-      }}>
-        Connexion en cours...
-      </p>
+      <h2>Adresse vérifiée</h2>
+      <p>Connexion en cours…</p>
     </div>
   )
 
   return (
-    <div style={{ textAlign: 'center', position: 'relative' }}>
-      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}`}</style>
-
-      {/* X button */}
-      <button
-        type="button"
-        onClick={onClose}
-        style={{
-          position: 'absolute', top: '-8px', right: '-8px',
-          width: 32, height: 32, borderRadius: '50%',
-          border: '1px solid var(--border)',
-          background: 'var(--bg-card)',
-          color: 'var(--text-muted)',
-          fontSize: '18px', fontWeight: 400,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.15s', lineHeight: 1, padding: 0,
-        }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
-      >
-        ×
+    <form className="auth-form" onSubmit={handleVerify}>
+      <button type="button" className="back-link" onClick={onBack}>
+        <Icon name="arrow-left" size={16} />
+        Modifier l'adresse email
       </button>
 
-      {/* Icon */}
-      <div style={{
-        width: 64, height: 64, borderRadius: '50%',
-        background: 'rgba(232,160,32,0.1)', border: '1px solid rgba(232,160,32,0.25)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 20px', fontSize: '28px',
-      }}>📧</div>
+      <div className="auth-heading">
+        <h1>Vérifiez votre email</h1>
+        <p>Saisissez le code à 6 chiffres envoyé à <strong>{maskedEmail}</strong>.</p>
+      </div>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '26px', letterSpacing: '2px', color: 'var(--text-primary)', marginBottom: '8px' }}>
-        VÉRIFICATION
-      </h2>
-      <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '28px' }}>
-        Un code à 6 chiffres a été envoyé à<br />
-        <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{maskedEmail}</span>
-      </p>
-
-      {/* OTP inputs */}
-      <div
-        style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px', animation: error ? 'shake 0.4s ease' : 'none' }}
-        onPaste={handlePaste}
-      >
+      <div className={`otp ${error ? 'has-error' : ''}`} onPaste={handlePaste}>
         {otp.map((digit, idx) => (
           <input
             key={idx}
             id={`otp-${idx}`}
             type="text"
             inputMode="numeric"
+            autoComplete={idx === 0 ? 'one-time-code' : 'off'}
             maxLength={1}
             value={digit}
+            aria-label={`Chiffre ${idx + 1}`}
+            className={digit ? 'is-filled' : ''}
             onChange={e => handleOtpChange(idx, e.target.value)}
             onKeyDown={e => handleOtpKeyDown(idx, e)}
-            style={{
-              width: 46, height: 54,
-              borderRadius: '10px',
-              border: `2px solid ${error ? '#f87171' : digit ? 'var(--accent)' : 'var(--border)'}`,
-              background: error ? 'rgba(248,113,113,0.06)' : digit ? 'rgba(232,160,32,0.08)' : 'var(--bg-card)',
-              color: 'var(--text-primary)',
-              fontSize: '22px', fontWeight: 700,
-              textAlign: 'center',
-              outline: 'none',
-              transition: 'all 0.15s',
-              fontFamily: 'var(--font-mono)',
-            }}
-            onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
-            onBlur={e => { if (!digit && !error) e.target.style.borderColor = 'var(--border)' }}
           />
         ))}
       </div>
 
-      {/* Error */}
       {error && (
-        <p style={{ fontSize: '12px', color: '#f87171', marginBottom: '16px', fontFamily: 'var(--font-mono)' }}>
-          ⚠ {error}
-        </p>
+        <p className="field-error otp-error" role="alert"><Icon name="alert-circle" size={14} />{error}</p>
       )}
 
-      {/* Verify button */}
-      <button
-        type="button"
-        onClick={handleVerify}
-        disabled={loading || !filled}
-        style={{
-          width: '100%', padding: '13px', borderRadius: '10px', border: 'none',
-          background: filled ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-          color: filled ? '#000' : 'var(--text-dim)',
-          fontSize: '14px', fontWeight: 700,
-          cursor: filled && !loading ? 'pointer' : 'not-allowed',
-          transition: 'all 0.2s', fontFamily: 'var(--font-body)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-          opacity: loading ? 0.8 : 1, marginBottom: '16px',
-        }}
-        onMouseEnter={e => { if (filled && !loading) e.currentTarget.style.boxShadow = '0 8px 28px rgba(232,160,32,0.35)' }}
-        onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
-      >
-        {loading ? <><Spinner />Vérification...</> : 'Confirmer le code'}
+      <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loading || !filled}>
+        {loading ? <><span className="spinner spinner-ink" />Vérification…</> : 'Valider le code'}
       </button>
 
-      {/* Resend */}
-      <div style={{ fontSize: '13px', color: 'var(--text-dim)' }}>
+      <p className="auth-switch">
         {canResend ? (
-          <span onClick={handleResend} style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>
-            Renvoyer le code
-          </span>
+          <>Rien reçu ? <button type="button" className="btn-text" onClick={handleResend}>Renvoyer le code</button></>
         ) : (
-          <span>
-            Renvoyer dans{' '}
-            <span style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-              {countdown}s
-            </span>
-          </span>
+          <>Vous pourrez renvoyer le code dans <strong className="num">{countdown} s</strong></>
         )}
-      </div>
-    </div>
+      </p>
+    </form>
   )
 }
 
@@ -289,11 +181,14 @@ export default function AuthPage() {
   const [apiError, setApiError] = useState(null)
   const [errors, setErrors] = useState({})
   const { login } = useAuth()
+  const { movies } = useMovies()
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from || '/'
 
   const [form, setForm] = useState({ email: '', password: '', fullName: '', confirmPassword: '' })
+
+  const backdrop = movies.find(m => m.backdropPath)?.backdropPath
 
   function update(field, val) {
     setForm(f => ({ ...f, [field]: val }))
@@ -303,13 +198,13 @@ export default function AuthPage() {
 
   function validate() {
     const e = {}
-    if (!form.email) e.email = 'Email requis'
-    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Email invalide'
-    if (!form.password) e.password = 'Mot de passe requis'
-    else if (form.password.length < 6) e.password = 'Minimum 6 caractères'
+    if (!form.email) e.email = 'Saisissez votre adresse email.'
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Cette adresse email n\'est pas valide.'
+    if (!form.password) e.password = 'Saisissez votre mot de passe.'
+    else if (form.password.length < 6) e.password = 'Le mot de passe doit contenir au moins 6 caractères.'
     if (mode === 'register') {
-      if (!form.fullName) e.fullName = 'Nom requis'
-      if (form.confirmPassword !== form.password) e.confirmPassword = 'Les mots de passe ne correspondent pas'
+      if (!form.fullName) e.fullName = 'Saisissez votre nom.'
+      if (form.confirmPassword !== form.password) e.confirmPassword = 'Les deux mots de passe ne correspondent pas.'
     }
     setErrors(e)
     return Object.keys(e).length === 0
@@ -329,7 +224,7 @@ export default function AuthPage() {
           body: JSON.stringify({ fullName: form.fullName, email: form.email, password: form.password }),
         })
         const data = await res.json().catch(() => ({}))
-        if (!res.ok) { setApiError(data.message || "Erreur lors de l'inscription"); return }
+        if (!res.ok) { setApiError(data.message || "L'inscription a échoué. Réessayez."); return }
 
         if (!data.token) {
           setPendingEmail(form.email)
@@ -346,12 +241,12 @@ export default function AuthPage() {
           body: JSON.stringify({ email: form.email, password: form.password }),
         })
         const data = await res.json()
-        if (!res.ok) { setApiError(data.message || 'Email ou mot de passe incorrect'); return }
+        if (!res.ok) { setApiError(data.message || 'Email ou mot de passe incorrect.'); return }
         login(data.token, data.user)
         navigate(from, { replace: true })
       }
     } catch {
-      setApiError('Impossible de contacter le serveur')
+      setApiError('Le serveur ne répond pas. Réessayez dans un instant.')
     } finally {
       setLoading(false)
     }
@@ -368,215 +263,130 @@ export default function AuthPage() {
     setApiError(null)
     setShowOtp(false)
     setForm({ email: '', password: '', fullName: '', confirmPassword: '' })
-    navigate(m === 'login' ? '/login' : '/register', { replace: true })
+    navigate(m === 'login' ? '/login' : '/register', { replace: true, state: location.state })
   }
 
   function handleClose() {
-    navigate(-1)
+    // Retour à la page précédente si elle existe dans l'app, sinon accueil
+    if (window.history.state?.idx > 0) navigate(-1)
+    else navigate('/')
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'rgba(0,0,0,0.75)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'var(--font-body)', padding: '20px',
-        position: 'relative', overflow: 'hidden',
-      }}
-    >
-      <div style={{ position: 'fixed', top: '-200px', left: '-200px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,160,32,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', bottom: '-150px', right: '-150px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,160,32,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+    <div className="auth">
+      {/* Panneau visuel (desktop) */}
+      <aside className="auth-visual" aria-hidden="true">
+        {backdrop && (
+          <img src={`${TMDB}w1280${backdrop}`} alt="" className="auth-visual-img" />
+        )}
+        <div className="auth-visual-shade" />
+        <div className="auth-visual-content">
+          <Logo size={34} />
+          <div>
+            <p className="auth-visual-title display">Votre prochaine séance commence ici.</p>
+            <p className="auth-visual-text">Choisissez votre film, votre horaire et vos sièges. Votre billet arrive par email.</p>
+          </div>
+        </div>
+      </aside>
 
-      {/* Modal card */}
-      <div
-        style={{
-          width: '100%', maxWidth: '420px',
-          background: 'var(--bg-secondary)',
-          borderRadius: '20px', border: '1px solid var(--border)',
-          padding: '40px 36px',
-          boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
-          animation: 'fadeIn 0.4s ease',
-          position: 'relative',
-        }}
-      >
-        {/* OTP Screen */}
-        {showOtp ? (
-          <OtpScreen
-            email={pendingEmail}
-            onSuccess={handleOtpSuccess}
-            onClose={handleClose}
-          />
-        ) : (
-          <>
-            {/* X button */}
-            <button
-              type="button"
-              onClick={handleClose}
-              style={{
-                position: 'absolute', top: '16px', right: '16px',
-                width: 32, height: 32, borderRadius: '50%',
-                border: '1px solid var(--border)',
-                background: 'var(--bg-card)',
-                color: 'var(--text-muted)',
-                fontSize: '18px', fontWeight: 400,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s', lineHeight: 1, padding: 0,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
-            >
-              ×
-            </button>
+      {/* Formulaire */}
+      <main className="auth-panel">
+        <div className="auth-topbar">
+          <Logo size={30} className="auth-logo-mobile" />
+          <button type="button" className="icon-btn" onClick={handleClose} aria-label="Fermer">
+            <Icon name="x" size={18} />
+          </button>
+        </div>
 
-            {/* Logo */}
-            <div onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '32px', justifyContent: 'center' }}>
-              <div style={{ width: 32, height: 32, borderRadius: '8px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, color: '#000' }}>C</div>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: '20px', letterSpacing: '3px', color: 'var(--text-primary)' }}>CINÉBOOK</span>
-            </div>
-
-            {/* Tabs */}
-            <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: '10px', padding: '4px', marginBottom: '28px', border: '1px solid var(--border)' }}>
-              {[['login', 'Connexion'], ['register', 'Inscription']].map(([m, label]) => (
-                <button key={m} type="button" onClick={() => switchMode(m)} style={{
-                  flex: 1, padding: '10px', borderRadius: '7px', border: 'none',
-                  background: mode === m ? 'var(--accent)' : 'transparent',
-                  color: mode === m ? '#000' : 'var(--text-muted)',
-                  fontSize: '13px', fontWeight: mode === m ? 700 : 400,
-                  cursor: 'pointer', transition: 'all 0.25s ease', fontFamily: 'var(--font-body)',
-                }}>{label}</button>
-              ))}
-            </div>
-
-            {/* Heading */}
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', letterSpacing: '2px', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                {mode === 'login' ? 'BON RETOUR !' : 'CRÉER UN COMPTE'}
-              </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                {mode === 'login' ? 'Connecte-toi pour accéder à tes réservations.' : 'Rejoins CinéBook et réserve tes places en quelques clics.'}
-              </p>
-            </div>
-
-            {/* API Error */}
-            {apiError && (
-              <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                ⚠ {apiError}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {mode === 'register' && (
-                <Field label="Nom complet" icon={<UserIcon />} value={form.fullName}
-                  onChange={v => update('fullName', v)} placeholder="Youssef Ben Ahmed" error={errors.fullName} />
-              )}
-              <Field label="Adresse email" icon={<MailIcon />} value={form.email}
-                onChange={v => update('email', v)} placeholder="you@example.com" type="email" error={errors.email} />
-              <Field label="Mot de passe" icon={<LockIcon />} value={form.password}
-                onChange={v => update('password', v)} placeholder="••••••••"
-                type={showPass ? 'text' : 'password'} error={errors.password}
-                suffix={
-                  <button type="button" onClick={() => setShowPass(s => !s)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 4px' }}>
-                    {showPass ? <EyeOffIcon /> : <EyeIcon />}
+        <div className="auth-card">
+          {showOtp ? (
+            <OtpScreen
+              email={pendingEmail}
+              onSuccess={handleOtpSuccess}
+              onBack={() => setShowOtp(false)}
+            />
+          ) : (
+            <>
+              <div className="auth-tabs" role="tablist">
+                {[['login', 'Connexion'], ['register', 'Inscription']].map(([m, label]) => (
+                  <button key={m} type="button" role="tab" aria-selected={mode === m}
+                    className={`auth-tab ${mode === m ? 'is-active' : ''}`} onClick={() => switchMode(m)}>
+                    {label}
                   </button>
-                }
-              />
-              {mode === 'register' && (
-                <Field label="Confirmer le mot de passe" icon={<LockIcon />} value={form.confirmPassword}
-                  onChange={v => update('confirmPassword', v)} placeholder="••••••••"
-                  type="password" error={errors.confirmPassword} />
-              )}
+                ))}
+              </div>
 
-              {mode === 'login' && (
-                <div style={{ textAlign: 'right', marginTop: '-4px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--accent)', cursor: 'pointer', fontWeight: 500 }}>Mot de passe oublié ?</span>
+              <div className="auth-heading">
+                <h1>{mode === 'login' ? 'Bon retour parmi nous' : 'Créer votre compte'}</h1>
+                <p>{mode === 'login' ? 'Connectez-vous pour réserver et retrouver vos billets.' : 'Gratuit, et utile pour réserver vos places en quelques clics.'}</p>
+              </div>
+
+              {apiError && (
+                <div className="alert alert-error" role="alert">
+                  <Icon name="alert-circle" size={16} />
+                  <p>{apiError}</p>
                 </div>
               )}
 
-              <button type="submit" disabled={loading} style={{
-                marginTop: '4px', width: '100%', padding: '14px',
-                borderRadius: '10px', border: 'none',
-                background: 'var(--accent)', color: '#000',
-                fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.25s ease',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                fontFamily: 'var(--font-body)', opacity: loading ? 0.8 : 1,
-              }}
-                onMouseEnter={e => { if (!loading) e.currentTarget.style.boxShadow = '0 8px 28px rgba(232,160,32,0.35)' }}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
-              >
-                {loading ? <><Spinner />{mode === 'login' ? 'Connexion...' : 'Création...'}</> : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
-              </button>
+              <form onSubmit={handleSubmit} className="auth-form" noValidate>
+                {mode === 'register' && (
+                  <Field id="fullName" label="Nom complet" icon="user" value={form.fullName} autoComplete="name"
+                    onChange={v => update('fullName', v)} placeholder="Prénom Nom" error={errors.fullName} />
+                )}
+                <Field id="email" label="Adresse email" icon="mail" value={form.email} autoComplete="email"
+                  onChange={v => update('email', v)} placeholder="vous@exemple.com" type="email" error={errors.email} />
+                <Field id="password" label="Mot de passe" icon="lock" value={form.password}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  onChange={v => update('password', v)} placeholder={mode === 'register' ? '6 caractères minimum' : ''}
+                  type={showPass ? 'text' : 'password'} error={errors.password}
+                  suffix={
+                    <button type="button" className="field-suffix" onClick={() => setShowPass(s => !s)}
+                      aria-label={showPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                      <Icon name={showPass ? 'eye-off' : 'eye'} size={18} />
+                    </button>
+                  }
+                />
+                {mode === 'register' && (
+                  <Field id="confirmPassword" label="Confirmer le mot de passe" icon="lock" value={form.confirmPassword}
+                    autoComplete="new-password"
+                    onChange={v => update('confirmPassword', v)}
+                    type="password" error={errors.confirmPassword} />
+                )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '2px 0' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>ou</span>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-              </div>
+                <button type="submit" className="btn btn-primary btn-lg btn-block auth-submit" disabled={loading}>
+                  {loading
+                    ? <><span className="spinner spinner-ink" />{mode === 'login' ? 'Connexion…' : 'Création du compte…'}</>
+                    : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+                </button>
+              </form>
 
-              <button type="button" style={{
-                width: '100%', padding: '12px', borderRadius: '10px',
-                border: '1px solid var(--border)', background: 'rgba(255,255,255,0.03)',
-                color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                transition: 'all 0.2s', fontFamily: 'var(--font-body)',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
-              >
-                <GoogleIcon /> Continuer avec Google
-              </button>
-            </form>
-
-            <p style={{ marginTop: '24px', fontSize: '13px', color: 'var(--text-dim)', textAlign: 'center' }}>
-              {mode === 'login' ? "Pas encore de compte ? " : "Déjà membre ? "}
-              <span onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-                style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' }}>
-                {mode === 'login' ? "S'inscrire" : 'Se connecter'}
-              </span>
-            </p>
-          </>
-        )}
-      </div>
+              <p className="auth-switch">
+                {mode === 'login' ? 'Pas encore de compte ? ' : 'Déjà inscrit ? '}
+                <button type="button" className="btn-text" onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
+                  {mode === 'login' ? 'Créer un compte' : 'Se connecter'}
+                </button>
+              </p>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   )
 }
 
 // ─── Field component ───────────────────────────────────────────
-function Field({ label, icon, value, onChange, placeholder, type = 'text', error, suffix }) {
-  const [focused, setFocused] = useState(false)
+function Field({ id, label, icon, value, onChange, placeholder, type = 'text', error, suffix, autoComplete }) {
   return (
-    <div>
-      <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '7px' }}>
-        {label}
-      </label>
-      <div style={{
-        display: 'flex', alignItems: 'center', background: 'var(--bg-card)',
-        border: `1px solid ${error ? '#f87171' : focused ? 'var(--accent)' : 'var(--border)'}`,
-        borderRadius: '9px', padding: '0 14px', transition: 'border-color 0.2s', gap: '10px',
-      }}>
-        <span style={{ color: error ? '#f87171' : focused ? 'var(--accent)' : 'var(--text-dim)', display: 'flex', transition: 'color 0.2s' }}>{icon}</span>
-        <input type={type} value={value} onChange={e => onChange(e.target.value)}
-          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          placeholder={placeholder}
-          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '14px', padding: '13px 0', fontFamily: 'var(--font-body)' }}
-        />
+    <div className={`field ${error ? 'has-error' : ''}`}>
+      <label className="field-label" htmlFor={id}>{label}</label>
+      <div className="field-control">
+        <Icon name={icon} size={17} />
+        <input id={id} type={type} value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder} autoComplete={autoComplete}
+          aria-invalid={!!error} aria-describedby={error ? `${id}-error` : undefined} />
         {suffix}
       </div>
-      {error && <p style={{ fontSize: '11px', color: '#f87171', marginTop: '5px', fontFamily: 'var(--font-mono)' }}>⚠ {error}</p>}
+      {error && <p className="field-error" id={`${id}-error`}><Icon name="alert-circle" size={13} />{error}</p>}
     </div>
   )
 }
-
-// ─── Icons & Spinner ───────────────────────────────────────────
-const MailIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-const LockIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-const UserIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-const EyeIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-const EyeOffIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-const GoogleIcon = () => <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-const Spinner = () => (<><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style><div style={{ width: 15, height: 15, border: '2px solid rgba(0,0,0,0.2)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /></>)

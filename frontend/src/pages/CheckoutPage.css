@@ -1,0 +1,82 @@
+.checkout-container { max-width: 1040px; }
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-areas: 'pay summary';
+  gap: 40px;
+  align-items: start;
+}
+
+/* Récapitulatif */
+.summary {
+  grid-area: summary;
+  position: sticky;
+  top: calc(var(--nav-h) + 24px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.summary-movie { display: flex; gap: 14px; padding: 18px; border-bottom: 1px solid var(--line); }
+.summary-poster { width: 60px; height: 90px; object-fit: cover; border-radius: var(--r-sm); flex-shrink: 0; }
+.summary-movie-text { min-width: 0; }
+.summary-movie h2 { font-size: var(--fs-lg); font-weight: 700; line-height: 1.25; margin-bottom: 6px; }
+.summary-when { font-size: var(--fs-sm); color: var(--text-2); }
+.summary-when::first-letter { text-transform: uppercase; }
+.summary-where { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: var(--fs-sm); color: var(--text-2); margin-top: 2px; }
+
+.summary-lines { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.summary-lines > div { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; font-size: var(--fs-md); }
+.summary-lines dt { color: var(--text-2); }
+.summary-lines dd { text-align: right; }
+.summary-seats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.summary-total { padding-top: 14px; border-top: 1px solid var(--line); align-items: center !important; }
+.summary-total dt { color: var(--text); font-weight: 600; }
+.summary-total dd { font-size: var(--fs-2xl); font-stretch: 85%; font-weight: 750; color: var(--accent); }
+
+/* Paiement */
+.pay { grid-area: pay; display: flex; flex-direction: column; gap: 20px; }
+.pay-title { font-size: var(--fs-3xl); font-stretch: 72%; font-weight: 800; }
+
+.card-preview {
+  position: relative;
+  max-width: 380px;
+  aspect-ratio: 1.586;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(255, 194, 61, 0.22), transparent 55%),
+    linear-gradient(135deg, #2a2620, #171513);
+  border: 1px solid var(--line-strong);
+  display: flex; flex-direction: column; justify-content: space-between;
+  overflow: hidden;
+}
+.card-preview-top { display: flex; justify-content: space-between; align-items: center; }
+.card-chip { width: 38px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #e9c46a, #b8892c); }
+.card-brand { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+.card-number { font-size: clamp(1.05rem, 4.6vw, 1.4rem); font-weight: 600; letter-spacing: 0.08em; }
+.card-preview-bottom { display: flex; justify-content: space-between; gap: 16px; }
+.card-preview-bottom span { font-size: 10px; color: var(--text-3); }
+.card-preview-bottom p { font-size: var(--fs-sm); font-weight: 600; letter-spacing: 0.04em; }
+.card-preview .is-empty { color: rgba(255, 240, 220, 0.3); }
+
+.pay-fields { display: flex; flex-direction: column; gap: 16px; }
+.pay-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.pay-cta { margin-top: 4px; }
+.pay-note { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-3); }
+
+@media (max-width: 860px) {
+  .checkout-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'summary' 'pay';
+    gap: 28px;
+  }
+  .summary { position: static; }
+}
+@media (max-width: 640px) {
+  .checkout { padding-top: calc(var(--nav-h) + 12px); }
+  .steps { margin: 12px 0 20px; }
+  .pay-title { font-size: var(--fs-2xl); }
+  .card-preview { max-width: none; padding: 18px 20px; }
+}

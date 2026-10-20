@@ -1,43 +1,65 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-
-const POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
-
-function formatReleaseDate(iso) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
+import Logo from './Logo'
+import Icon from './Icon'
+import { POSTER_SMALL, formatReleaseDate } from '../utils/format'
+import './Navbar.css'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [megaMenu, setMegaMenu] = useState(null) // 'upcoming' | null
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [upcoming, setUpcoming] = useState([])
   const [loadingUpcoming, setLoadingUpcoming] = useState(false)
-  const megaRef = useRef(null)
+  const navRef = useRef(null)
+  const accountRef = useRef(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const { isAuthenticated, user, logout } = useAuth()
 
+  const firstName = user?.fullName?.split(' ')[0]
+  const initial = user?.fullName?.charAt(0).toUpperCase() || 'U'
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Fermer le mega menu si clic en dehors
+  // Fermer menus au changement de page
+  useEffect(() => {
+    setMegaMenu(null)
+    setDrawerOpen(false)
+    setDropdownOpen(false)
+  }, [location.pathname])
+
+  // Clic en dehors : mega menu + menu compte
   useEffect(() => {
     function handleClick(e) {
-      if (megaRef.current && !megaRef.current.contains(e.target)) {
-        setMegaMenu(null)
-      }
+      if (navRef.current && !navRef.current.contains(e.target)) setMegaMenu(null)
+      if (accountRef.current && !accountRef.current.contains(e.target)) setDropdownOpen(false)
+    }
+    function handleKey(e) {
+      if (e.key === 'Escape') { setMegaMenu(null); setDropdownOpen(false); setDrawerOpen(false) }
     }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [])
 
-  async function openUpcoming() {
-    if (megaMenu === 'upcoming') { setMegaMenu(null); return }
-    setMegaMenu('upcoming')
+  // Bloquer le scroll de la page quand le menu mobile est ouvert
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [drawerOpen])
+
+  async function loadUpcoming() {
     setLoadingUpcoming(true)
     try {
       const res = await fetch(`/api/movies/upcoming`)
@@ -47,219 +69,160 @@ export default function Navbar() {
     finally { setLoadingUpcoming(false) }
   }
 
+  function toggleUpcoming() {
+    if (megaMenu === 'upcoming') { setMegaMenu(null); return }
+    setMegaMenu('upcoming')
+    loadUpcoming()
+  }
+
   function handleLogout() {
     logout()
     setDropdownOpen(false)
+    setDrawerOpen(false)
     navigate('/')
   }
 
+  function goToMovie(id) {
+    setMegaMenu(null)
+    setDrawerOpen(false)
+    navigate(`/movies/${id}`)
+  }
+
+  const solid = scrolled || megaMenu || drawerOpen
+
+  const upcomingContent = loadingUpcoming ? (
+    <div className="upcoming-status"><div className="spinner" />Chargement…</div>
+  ) : upcoming.length === 0 ? (
+    <p className="upcoming-status">Aucun film annoncé pour le moment.</p>
+  ) : (
+    <ul className="upcoming-list scroll-x">
+      {upcoming.slice(0, 10).map(movie => (
+        <li key={movie.id}>
+          <button type="button" className="upcoming-item" onClick={() => goToMovie(movie.id)}>
+            <div className="upcoming-poster">
+              {movie.posterPath && (
+                <img src={`${POSTER_SMALL}${movie.posterPath}`} alt="" loading="lazy"
+                  onError={e => { e.currentTarget.style.display = 'none' }} />
+              )}
+            </div>
+            <span className="upcoming-title">{movie.title}</span>
+            {movie.releaseDate && <span className="upcoming-date">Sortie le {formatReleaseDate(movie.releaseDate)}</span>}
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+
   return (
-    <nav ref={megaRef} style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
-      padding: scrolled ? '14px 40px' : '22px 40px',
-      background: scrolled ? 'rgba(8,10,15,0.95)' : 'linear-gradient(to bottom, rgba(8,10,15,0.85), transparent)',
-      backdropFilter: scrolled || megaMenu ? 'blur(16px)' : 'none',
-      borderBottom: scrolled || megaMenu ? '1px solid rgba(255,255,255,0.05)' : 'none',
-      transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
-    }}>
+    <header ref={navRef} className={`nav ${solid ? 'is-solid' : ''}`}>
+      <div className="nav-bar container">
+        <Logo />
 
-      {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <nav className="nav-links" aria-label="Navigation principale">
+          <NavLink to="/" end className="nav-link">Films</NavLink>
+          <button type="button" className={`nav-link ${megaMenu === 'upcoming' ? 'is-open' : ''}`}
+            aria-expanded={megaMenu === 'upcoming'} onClick={toggleUpcoming}>
+            Prochainement
+            <Icon name="chevron-down" size={14} strokeWidth={2.2} className="nav-caret" />
+          </button>
+          <NavLink to="/seances" className="nav-link">Séances</NavLink>
+        </nav>
 
-        {/* Logo */}
-        <div onClick={() => { navigate('/'); setMegaMenu(null) }}
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#000', fontFamily: 'var(--font-display)' }}>C</div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: '24px', letterSpacing: '3px', color: 'var(--text-primary)' }}>CINÉBOOK</span>
-        </div>
-
-        {/* Nav links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '36px' }}>
-
-          {/* Films → Home */}
-          <span
-            onClick={() => { setMegaMenu(null); navigate('/') }}
-            style={{
-              fontSize: '13px', fontWeight: 500,
-              color: 'var(--text-muted)',
-              letterSpacing: '1px', textTransform: 'uppercase',
-              cursor: 'pointer', transition: 'color 0.2s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-          >
-            Films
-          </span>
-
-          {/* Films à venir → mega-menu */}
-          <span
-            onClick={openUpcoming}
-            style={{
-              fontSize: '13px', fontWeight: 500,
-              color: megaMenu === 'upcoming' ? 'var(--accent)' : 'var(--text-muted)',
-              letterSpacing: '1px', textTransform: 'uppercase',
-              cursor: 'pointer', transition: 'color 0.2s',
-              display: 'flex', alignItems: 'center', gap: '5px',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
-            onMouseLeave={e => { if (megaMenu !== 'upcoming') e.currentTarget.style.color = 'var(--text-muted)' }}
-          >
-            Films à venir
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-              style={{ transform: megaMenu === 'upcoming' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </span>
-
-          {/* Séances → page dédiée */}
-          <span
-            onClick={() => { setMegaMenu(null); navigate('/seances') }}
-            style={{
-              fontSize: '13px', fontWeight: 500,
-              color: 'var(--text-muted)',
-              letterSpacing: '1px', textTransform: 'uppercase',
-              cursor: 'pointer', transition: 'color 0.2s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-          >
-            Séances
-          </span>
-
-          {['Offres', 'À propos'].map(item => (
-            <span key={item} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s' }}
-              onMouseEnter={e => e.target.style.color = 'var(--accent)'}
-              onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
-            >{item}</span>
-          ))}
-        </div>
-
-        {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-
+        <div className="nav-right">
           {isAuthenticated ? (
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => setDropdownOpen(o => !o)} style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'var(--bg-card)', border: '1px solid var(--border)',
-                borderRadius: '8px', padding: '7px 14px',
-                color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500,
-                cursor: 'pointer', transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-                onMouseLeave={e => { if (!dropdownOpen) e.currentTarget.style.borderColor = 'var(--border)' }}
-              >
-                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#000' }}>
-                  {user?.fullName?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                {user?.fullName?.split(' ')[0]}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
+            <div className="account" ref={accountRef}>
+              <button type="button" className="account-btn" aria-expanded={dropdownOpen} aria-haspopup="menu"
+                onClick={() => setDropdownOpen(o => !o)}>
+                <span className="avatar">{initial}</span>
+                <span className="account-name">{firstName}</span>
+                <Icon name="chevron-down" size={14} className="nav-caret" />
               </button>
 
               {dropdownOpen && (
-                <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '10px', padding: '6px', minWidth: '180px', boxShadow: '0 16px 40px rgba(0,0,0,0.4)', animation: 'slideDown 0.2s ease', zIndex: 100 }}>
-                  <div style={{ padding: '10px 12px 8px', borderBottom: '1px solid var(--border)', marginBottom: '6px' }}>
-                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>{user?.fullName}</p>
-                    <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>{user?.email}</p>
+                <div className="account-menu" role="menu">
+                  <div className="account-head">
+                    <p className="account-fullname">{user?.fullName}</p>
+                    <p className="account-email">{user?.email}</p>
                   </div>
-                  {[{ label: 'Mes réservations', icon: '🎟️' }, { label: 'Mon profil', icon: '👤' }].map(({ label, icon }) => (
-                    <button key={label} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', borderRadius: '7px', border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-muted)' }}
-                    ><span>{icon}</span>{label}</button>
-                  ))}
-                  <div style={{ borderTop: '1px solid var(--border)', marginTop: '6px', paddingTop: '6px' }}>
-                    <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', borderRadius: '7px', border: 'none', background: 'none', color: '#f87171', fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                    ><span>🚪</span>Se déconnecter</button>
-                  </div>
+                  <button type="button" role="menuitem" className="account-item" disabled>
+                    <Icon name="ticket" size={16} />Mes réservations<span className="soon">Bientôt</span>
+                  </button>
+                  <button type="button" role="menuitem" className="account-item" disabled>
+                    <Icon name="user" size={16} />Mon profil<span className="soon">Bientôt</span>
+                  </button>
+                  <div className="account-sep" />
+                  <button type="button" role="menuitem" className="account-item is-danger" onClick={handleLogout}>
+                    <Icon name="log-out" size={16} />Se déconnecter
+                  </button>
                 </div>
               )}
             </div>
           ) : (
-            <button onClick={() => navigate('/login')} style={{ background: 'var(--accent)', border: 'none', borderRadius: '8px', padding: '9px 18px', color: '#000', fontSize: '13px', fontWeight: 600, letterSpacing: '0.5px', cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-            >Connexion</button>
+            <button type="button" className="btn btn-primary btn-sm nav-login" onClick={() => navigate('/login')}>
+              Se connecter
+            </button>
           )}
+
+          <button type="button" className="nav-burger" aria-label={drawerOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={drawerOpen} onClick={() => setDrawerOpen(o => !o)}>
+            <Icon name={drawerOpen ? 'x' : 'menu'} size={22} />
+          </button>
         </div>
       </div>
 
-      {/* ── Mega menu Films à venir ── */}
+      {/* Mega menu desktop */}
       {megaMenu === 'upcoming' && (
-        <div style={{
-          marginTop: '16px',
-          background: 'rgba(13,17,23,0.98)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '28px 32px',
-          animation: 'slideDown 0.2s ease',
-          maxHeight: '480px',
-          overflow: 'hidden',
-        }}>
-          <div style={{ marginBottom: '20px' }}>
-            <p style={{ fontSize: '11px', color: 'var(--accent)', fontFamily: 'var(--font-mono)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '4px' }}>Prochainement</p>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', letterSpacing: '2px', color: 'var(--text-primary)' }}>FILMS À VENIR</h3>
+        <div className="mega">
+          <div className="container">
+            <div className="mega-head">
+              <h3>Prochainement en salle</h3>
+              <p>Les films annoncés pour les semaines à venir.</p>
+            </div>
+            {upcomingContent}
           </div>
-
-          {loadingUpcoming ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-muted)', fontSize: '13px' }}>
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
-              Chargement...
-            </div>
-          ) : upcoming.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Aucun film à venir pour le moment.</p>
-          ) : (
-            <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-              {upcoming.slice(0, 8).map(movie => (
-                <div
-                  key={movie.id}
-                  onClick={() => { setMegaMenu(null); navigate(`/movies/${movie.id}`) }}
-                  style={{
-                    flex: '0 0 140px', cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  <div style={{ position: 'relative', marginBottom: '10px' }}>
-                    <img
-                      src={`${POSTER_BASE}${movie.posterPath}`}
-                      alt={movie.title}
-                      style={{ width: '100%', aspectRatio: '2/3', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)', display: 'block' }}
-                      onError={e => e.target.style.display = 'none'}
-                    />
-                    <div style={{
-                      position: 'absolute', bottom: '6px', left: '6px', right: '6px',
-                      background: 'rgba(8,10,15,0.85)', backdropFilter: 'blur(8px)',
-                      borderRadius: '5px', padding: '3px 6px', textAlign: 'center',
-                    }}>
-                      <p style={{ fontSize: '10px', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                        {formatReleaseDate(movie.releaseDate)}
-                      </p>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.3, marginBottom: '4px' }}>
-                    {movie.title}
-                  </p>
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                    {movie.categories?.slice(0, 2).map(c => (
-                      <span key={c.id} style={{ fontSize: '10px', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '3px', padding: '1px 5px' }}>
-                        {c.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
-    </nav>
+
+      {/* Menu mobile */}
+      {drawerOpen && (
+        <div className="drawer">
+          <nav className="drawer-links" aria-label="Navigation mobile">
+            <NavLink to="/" end className="drawer-link">Films à l'affiche</NavLink>
+            <NavLink to="/seances" className="drawer-link">Séances</NavLink>
+          </nav>
+
+          <section className="drawer-section">
+            <button type="button" className="drawer-link drawer-toggle" aria-expanded={megaMenu === 'upcoming'}
+              onClick={toggleUpcoming}>
+              Prochainement
+              <Icon name="chevron-down" size={18} className="nav-caret" />
+            </button>
+            {megaMenu === 'upcoming' && <div className="drawer-upcoming">{upcomingContent}</div>}
+          </section>
+
+          <div className="drawer-foot">
+            {isAuthenticated ? (
+              <>
+                <div className="drawer-user">
+                  <span className="avatar avatar-lg">{initial}</span>
+                  <div>
+                    <p className="account-fullname">{user?.fullName}</p>
+                    <p className="account-email">{user?.email}</p>
+                  </div>
+                </div>
+                <button type="button" className="btn btn-ghost btn-block" onClick={handleLogout}>
+                  <Icon name="log-out" size={16} />Se déconnecter
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => navigate('/login')}>Se connecter</button>
+                <button type="button" className="btn btn-ghost btn-lg btn-block" onClick={() => navigate('/register')}>Créer un compte</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
   )
 }

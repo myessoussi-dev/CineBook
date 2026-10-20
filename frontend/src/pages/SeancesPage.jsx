@@ -1,44 +1,22 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import LoginPromptModal from '../components/LoginPromptModal'
+import Footer from '../components/Footer'
+import Icon from '../components/Icon'
+import {
+  POSTER_SMALL, formatTime, formatDateFull, formatRuntime, getRoomFormat, groupSessionsByDate, dayParts, formatPrice,
+} from '../utils/format'
+import './SeancesPage.css'
 
-const POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
-
-function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDayLabel(dateStr) {
-  const d = new Date(dateStr)
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
-  if (d.toDateString() === today.toDateString()) return "Aujourd'hui"
-  if (d.toDateString() === tomorrow.toDateString()) return 'Demain'
-  return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-}
-
-function formatFullDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-function getRoomFormat(name = '') {
-  const n = name.toUpperCase()
-  if (n.includes('IMAX')) return 'IMAX'
-  if (n.includes('4DX')) return '4DX'
-  if (n.includes('VIP')) return 'VIP'
-  return '2D'
-}
-
-const FORMAT_COLORS = { IMAX: '#60a5fa', '4DX': '#a78bfa', VIP: '#e8a020', '2D': '#7a8394' }
-
-function groupSessionsByDate(sessions) {
-  const map = {}
+function groupByMovie(sessions) {
+  const map = new Map()
   sessions.forEach(s => {
-    const key = new Date(s.startTime).toDateString()
-    if (!map[key]) map[key] = { dateKey: key, sessions: [] }
-    map[key].sessions.push(s)
+    const key = s.movie?.id ?? 'unknown'
+    if (!map.has(key)) map.set(key, { movie: s.movie, sessions: [] })
+    map.get(key).sessions.push(s)
   })
-  return Object.values(map).sort((a, b) => new Date(a.dateKey) - new Date(b.dateKey))
+  return [...map.values()]
 }
 
 export default function SeancesPage() {
@@ -46,7 +24,9 @@ export default function SeancesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeDate, setActiveDate] = useState(null)
+  const [loginFrom, setLoginFrom] = useState(null)
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     async function fetchSessions() {
@@ -56,9 +36,6 @@ export default function SeancesPage() {
         const data = await res.json()
         const list = Array.isArray(data) ? data : []
         setSessions(list)
-        if (list.length > 0) {
-          setActiveDate(new Date(list[0].startTime).toDateString())
-        }
       } catch (e) {
         setError('Impossible de charger les séances.')
       } finally {
@@ -68,162 +45,135 @@ export default function SeancesPage() {
     fetchSessions()
   }, [])
 
-  const grouped = groupSessionsByDate(sessions)
-  const activeDayData = grouped.find(g => g.dateKey === activeDate)
+  const grouped = useMemo(() => groupSessionsByDate(sessions), [sessions])
+  const activeDay = grouped.find(g => g.key === activeDate) || grouped[0]
+  const movieGroups = useMemo(() => activeDay ? groupByMovie(activeDay.sessions) : [], [activeDay])
+
+  function openSession(s) {
+    const path = `/movies/${s.movie?.id}/sessions/${s.id}/seats`
+    if (!isAuthenticated) { setLoginFrom(`/movies/${s.movie?.id}`); return }
+    navigate(path, { state: { session: s, movie: s.movie } })
+  }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg-primary)',
-      fontFamily: 'var(--font-body)',
-      paddingTop: '100px',
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 40px 48px' }}>
-        <p style={{ fontSize: '11px', color: 'var(--accent)', fontFamily: 'var(--font-mono)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '8px' }}>
-          Programme
-        </p>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '36px', letterSpacing: '3px', color: 'var(--text-primary)', marginBottom: '6px' }}>
-          SÉANCES
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-          Réservez vos places pour les prochaines séances disponibles.
-        </p>
-      </div>
+    <>
+      <main className="page seances">
+        <div className="container">
+          <header className="page-head">
+            <h1 className="display">Séances</h1>
+            <p>Choisissez un jour, puis l'horaire qui vous convient.</p>
+          </header>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 40px 80px' }}>
+          {loading && (
+            <div className="seances-list">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="seance-row">
+                  <div className="skeleton" style={{ aspectRatio: '2/3' }} />
+                  <div>
+                    <div className="skeleton" style={{ height: 22, width: '40%', marginBottom: 12 }} />
+                    <div className="skeleton" style={{ height: 14, width: '25%', marginBottom: 20 }} />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="skeleton" style={{ height: 56, width: 110 }} />
+                      <div className="skeleton" style={{ height: 56, width: 110 }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {loading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-muted)', fontSize: '14px', padding: '60px 0' }}>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
-            Chargement des séances...
-          </div>
-        )}
+          {error && (
+            <div className="state">
+              <div className="state-icon"><Icon name="wifi-off" size={24} /></div>
+              <h2>{error}</h2>
+              <p>Vérifiez votre connexion puis rechargez la page.</p>
+              <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Recharger la page</button>
+            </div>
+          )}
 
-        {error && (
-          <div style={{ padding: '60px 0', color: '#f87171', fontSize: '14px' }}>⚠ {error}</div>
-        )}
+          {!loading && !error && sessions.length === 0 && (
+            <div className="state">
+              <div className="state-icon"><Icon name="calendar" size={24} /></div>
+              <h2>Aucune séance programmée</h2>
+              <p>Le programme de la semaine n'est pas encore disponible. En attendant, parcourez les films à l'affiche.</p>
+              <Link to="/" className="btn btn-primary">Voir les films</Link>
+            </div>
+          )}
 
-        {!loading && !error && sessions.length === 0 && (
-          <div style={{ padding: '60px 0', color: 'var(--text-muted)', fontSize: '14px' }}>
-            Aucune séance disponible pour le moment.
-          </div>
-        )}
+          {!loading && activeDay && (
+            <>
+              <div className="seances-dates scroll-x" role="tablist" aria-label="Jour">
+                {grouped.map(g => {
+                  const p = dayParts(g.date)
+                  const active = g === activeDay
+                  return (
+                    <button key={g.key} type="button" role="tab" aria-selected={active}
+                      className={`date-tab ${active ? 'is-active' : ''}`} onClick={() => setActiveDate(g.key)}>
+                      <span className="date-tab-week">{p.relative || p.weekday}</span>
+                      <span className="date-tab-day num">{p.day}</span>
+                      <span className="date-tab-month">{p.month}</span>
+                    </button>
+                  )
+                })}
+              </div>
 
-        {!loading && grouped.length > 0 && (
-          <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
-
-            {/* Date sidebar */}
-            <div style={{
-              flexShrink: 0, width: '200px',
-              position: 'sticky', top: '90px',
-              display: 'flex', flexDirection: 'column', gap: '6px',
-            }}>
-              <p style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>
-                Dates
+              <p className="seances-day">
+                <span className="seances-day-date">{formatDateFull(activeDay.date)}</span>
+                <span className="dim">
+                  {movieGroups.length} film{movieGroups.length > 1 ? 's' : ''}, {activeDay.sessions.length} séance{activeDay.sessions.length > 1 ? 's' : ''}
+                </span>
               </p>
-              {grouped.map(({ dateKey, sessions: ds }) => {
-                const isActive = activeDate === dateKey
-                return (
-                  <button
-                    key={dateKey}
-                    type="button"
-                    onClick={() => setActiveDate(dateKey)}
-                    style={{
-                      textAlign: 'left', padding: '12px 16px',
-                      borderRadius: '10px',
-                      border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                      background: isActive ? 'rgba(232,160,32,0.08)' : 'transparent',
-                      cursor: 'pointer', transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)' } }}
-                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' } }}
-                  >
-                    <p style={{ fontSize: '13px', fontWeight: isActive ? 700 : 500, color: isActive ? 'var(--accent)' : 'var(--text-primary)', marginBottom: '2px', textTransform: 'capitalize' }}>
-                      {formatDayLabel(dateKey)}
-                    </p>
-                    <p style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-                      {ds.length} séance{ds.length > 1 ? 's' : ''}
-                    </p>
-                  </button>
-                )
-              })}
-            </div>
 
-            {/* Sessions list */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {activeDayData && (
-                <>
-                  <div style={{ marginBottom: '20px' }}>
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', letterSpacing: '2px', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-                      {formatDayLabel(activeDate)}
-                    </h2>
-                    <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
-                      {formatFullDate(activeDate)}
-                    </p>
-                  </div>
+              <div className="seances-list">
+                {movieGroups.map(({ movie, sessions: ms }) => (
+                  <article key={movie?.id ?? 'unknown'} className="seance-row">
+                    <Link to={movie?.id ? `/movies/${movie.id}` : '#'} className="seance-poster" aria-label={movie?.title}>
+                      {movie?.posterPath ? (
+                        <img src={`${POSTER_SMALL}${movie.posterPath}`} alt="" loading="lazy" />
+                      ) : (
+                        <span className="seance-poster-empty"><Icon name="film" size={24} strokeWidth={1.4} /></span>
+                      )}
+                    </Link>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {activeDayData.sessions.map(s => {
-                      const fmt = getRoomFormat(s.room?.name)
-                      return (
-                        <div
-                          key={s.id}
-                          onClick={() => navigate(
-                            `/movies/${s.movie?.id}/sessions/${s.id}/seats`,
-                            { state: { session: s, movie: s.movie } }
-                          )}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '20px',
-                            padding: '16px 20px',
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '12px',
-                            cursor: 'pointer', transition: 'all 0.2s',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'rgba(232,160,32,0.03)' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                        >
-                          {s.movie?.posterPath ? (
-                            <img src={`${POSTER_BASE}${s.movie.posterPath}`} alt={s.movie?.title}
-                              style={{ width: 48, height: 68, objectFit: 'cover', borderRadius: '6px', flexShrink: 0, border: '1px solid var(--border)' }} />
-                          ) : (
-                            <div style={{ width: 48, height: 68, borderRadius: '6px', background: 'var(--bg-card)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🎬</div>
-                          )}
+                    <div className="seance-main">
+                      <div className="seance-info">
+                        <h2 className="seance-title">
+                          <Link to={movie?.id ? `/movies/${movie.id}` : '#'}>{movie?.title}</Link>
+                        </h2>
+                        <p className="seance-meta">
+                          {[formatRuntime(movie?.runtime), ...(movie?.categories?.slice(0, 2).map(c => c.name) || [])]
+                            .filter(Boolean).map((x, i) => <span key={i}>{x}</span>)}
+                        </p>
+                      </div>
 
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {s.movie?.title}
-                            </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>🏛 {s.room?.name}</span>
-                              <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', color: FORMAT_COLORS[fmt], background: `${FORMAT_COLORS[fmt]}18`, border: `1px solid ${FORMAT_COLORS[fmt]}30`, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                                {fmt}
+                      <div className="seance-times">
+                        {ms.map(s => {
+                          const fmt = getRoomFormat(s.room?.name)
+                          return (
+                            <button key={s.id} type="button" className="seance-time" onClick={() => openSession(s)}
+                              aria-label={`${formatTime(s.startTime)}, ${s.room?.name || ''}, ${fmt}`}>
+                              <span className="seance-time-top">
+                                <span className="seance-time-hour num">{formatTime(s.startTime)}</span>
+                                <span className={`format-badge format-${fmt}`}>{fmt}</span>
                               </span>
-                              {s.movie?.categories?.slice(0, 2).map(c => (
-                                <span key={c.id} style={{ fontSize: '11px', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '3px', padding: '1px 6px' }}>
-                                  {c.name}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+                              <span className="seance-time-room">{s.room?.name}</span>
+                              {s.price != null && <span className="seance-time-price num">{formatPrice(s.price)}</span>}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </main>
 
-                          <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                              {formatTime(s.startTime)}
-                            </p>
-                            <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>Réserver →</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      <Footer />
+
+      {loginFrom && <LoginPromptModal onClose={() => setLoginFrom(null)} from={loginFrom} />}
+    </>
   )
 }

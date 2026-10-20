@@ -1,0 +1,88 @@
+.seances-dates {
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 10;
+  padding: 12px 0;
+  margin-bottom: 8px;
+  background: var(--bg);
+}
+
+.seances-day {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 4px 16px;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-md);
+}
+.seances-day-date { font-weight: 600; }
+.seances-day-date::first-letter { text-transform: uppercase; }
+.seances-day .dim { font-size: var(--fs-sm); }
+
+.seances-list { display: flex; flex-direction: column; }
+
+.seance-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 24px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+.seance-poster {
+  display: block;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--surface-2);
+  box-shadow: 0 0 0 1px var(--line) inset;
+  align-self: start;
+}
+.seance-poster img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
+.seance-poster:hover img { opacity: 0.85; }
+.seance-poster-empty { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-3); }
+
+.seance-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.seance-title { font-size: var(--fs-xl); font-weight: 700; line-height: 1.2; }
+.seance-title a:hover { color: var(--accent); }
+.seance-meta {
+  display: flex; flex-wrap: wrap; column-gap: 12px;
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.seance-times { display: flex; flex-wrap: wrap; gap: 8px; }
+.seance-time {
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 128px;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition: border-color 0.18s, background-color 0.18s;
+}
+.seance-time:hover { border-color: var(--accent); background: var(--surface-2); }
+.seance-time-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.seance-time-hour { font-size: var(--fs-xl); font-weight: 750; font-stretch: 85%; line-height: 1; }
+.seance-time-room { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.seance-time-price { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
+
+@media (max-width: 640px) {
+  .seances-dates {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
+  .seances-dates .date-tab { min-width: 68px; }
+  .seance-row { grid-template-columns: 72px minmax(0, 1fr); gap: 14px; padding: 20px 0; }
+  .seance-main { display: contents; }
+  .seance-info { align-self: center; }
+  .seance-title { font-size: var(--fs-lg); }
+  .seance-times {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  .seance-time { min-width: 0; }
+  .seance-time-room { overflow: hidden; text-overflow: ellipsis; }
+}

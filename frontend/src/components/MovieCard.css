@@ -1,0 +1,80 @@
+.mcard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mcard-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line) inset;
+}
+.mcard-poster img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease), filter 0.3s;
+}
+.mcard-poster::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--accent) inset;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .mcard:hover .mcard-poster img { transform: scale(1.03); filter: brightness(1.08); }
+  .mcard:hover .mcard-poster::after { opacity: 1; }
+  .mcard:hover .mcard-title { color: var(--accent); }
+}
+.mcard:focus-visible { outline: none; }
+.mcard:focus-visible .mcard-poster::after { opacity: 1; }
+
+.mcard-fallback {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3);
+  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+}
+
+.mcard-rating {
+  position: absolute;
+  top: 8px; left: 8px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: var(--fs-xs);
+  color: var(--text);
+  background: rgba(15, 14, 13, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.mcard-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mcard-title {
+  font-size: var(--fs-base);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--text);
+  transition: color 0.18s;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mcard-meta {
+  display: flex; flex-wrap: wrap;
+  column-gap: 10px;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+@media (max-width: 640px) {
+  .mcard { gap: 10px; }
+  .mcard-title { font-size: var(--fs-md); }
+  .mcard-meta { font-size: var(--fs-xs); column-gap: 8px; }
+}

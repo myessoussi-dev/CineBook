@@ -1,0 +1,14 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.logo-mark { flex-shrink: 0; }
+.logo-word {
+  font-size: 1.375rem;
+  font-stretch: 78%;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
