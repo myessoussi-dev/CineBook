@@ -1,73 +1,72 @@
 .auth {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-}
-
-/* Panneau visuel */
-.auth-visual {
-  position: sticky; top: 0;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-  background:
-    radial-gradient(80% 60% at 20% 100%, rgba(255, 194, 61, 0.18), transparent 70%),
-    var(--surface);
-}
-.auth-visual-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: fade 0.8s ease both; }
-.auth-visual-shade {
-  position: absolute; inset: 0;
-  background:
-    linear-gradient(to top, rgba(15, 14, 13, 0.95) 0%, rgba(15, 14, 13, 0.4) 55%, rgba(15, 14, 13, 0.6) 100%);
-}
-.auth-visual-content {
   position: relative;
-  height: 100%;
-  display: flex; flex-direction: column; justify-content: space-between;
-  padding: 40px clamp(32px, 5vw, 64px) 56px;
-}
-.auth-visual-title { font-size: clamp(2.5rem, 4.6vw, 4.25rem); font-stretch: 66%; font-weight: 800; max-width: 15ch; margin-bottom: 16px; }
-.auth-visual-text { color: var(--text-2); max-width: 40ch; font-size: var(--fs-base); }
-
-/* Panneau formulaire */
-.auth-panel {
-  display: flex; flex-direction: column;
+  isolation: isolate;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 24px clamp(20px, 5vw, 56px) 40px;
+  display: flex; flex-direction: column;
 }
-.auth-topbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
-.auth-logo-mobile { display: none; margin-right: auto; }
+
+/* Blurred backdrop */
+.auth-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg); }
+.auth-bg img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: blur(40px) saturate(120%);
+  transform: scale(1.15);
+  opacity: 0.45;
+  animation: auth-bg 1.4s ease both;
+}
+.auth-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(70% 60% at 50% 45%, rgba(10, 10, 11, 0.55), rgba(10, 10, 11, 0.92));
+}
+@keyframes auth-bg { from { opacity: 0; } to { opacity: 0.45; } }
+
+.auth-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--nav-h);
+  flex-shrink: 0;
+}
+
+.auth-panel {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px var(--gutter) 64px;
+}
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
-  margin: auto;
-  padding: 32px 0;
-  animation: rise 0.4s var(--ease) both;
+  max-width: 440px;
+  padding: 36px 32px 32px;
+  background: rgba(19, 19, 21, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--line-strong);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.6s var(--ease) both;
 }
 
 .auth-tabs {
+  position: relative;
   display: grid; grid-template-columns: 1fr 1fr;
   padding: 4px;
   margin-bottom: 32px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  background: var(--surface-2);
+  border-radius: 999px;
 }
 .auth-tab {
-  height: 40px;
-  border-radius: 9px;
-  font-size: var(--fs-md); font-weight: 500;
+  height: 38px;
+  border-radius: 999px;
+  font-size: var(--fs-sm); font-weight: 600;
   color: var(--text-2);
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color 0.3s var(--ease), color 0.3s;
 }
 .auth-tab:hover { color: var(--text); }
-.auth-tab.is-active { background: var(--surface-3); color: var(--text); font-weight: 600; }
+.auth-tab.is-active { background: var(--accent); color: var(--accent-ink); }
 
 .auth-heading { margin-bottom: 24px; }
-.auth-heading h1 { font-size: var(--fs-3xl); font-stretch: 72%; font-weight: 800; line-height: 1.05; margin-bottom: 8px; }
+.auth-heading h1 { font-size: var(--fs-2xl); font-weight: 700; letter-spacing: -0.035em; line-height: 1.15; margin-bottom: 8px; }
 .auth-heading p { color: var(--text-2); font-size: var(--fs-md); }
 .auth-heading strong { color: var(--text); font-weight: 600; }
 
@@ -81,10 +80,11 @@
   width: 36px; height: 36px; margin-right: -8px;
   border-radius: 8px;
   color: var(--text-3);
+  transition: color 0.2s;
 }
 .field-suffix:hover { color: var(--text); }
 
-.auth-switch { margin-top: 24px; text-align: center; font-size: var(--fs-md); color: var(--text-2); }
+.auth-switch { margin-top: 24px; text-align: center; font-size: var(--fs-sm); color: var(--text-2); }
 .auth-switch .btn-text { font-size: inherit; }
 
 /* OTP */
@@ -96,17 +96,17 @@
   max-height: 64px;
   text-align: center;
   font-size: var(--fs-2xl);
-  font-weight: 700;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   background: var(--surface);
-  border: 1.5px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s, transform 0.2s var(--ease);
 }
-.otp input.is-filled { border-color: var(--accent-line); }
-.otp input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.otp input.is-filled { border-color: rgba(255, 255, 255, 0.35); }
+.otp input:focus { border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.07); transform: translateY(-2px); }
 .otp.has-error input { border-color: var(--danger); background: var(--danger-soft); }
 .otp-error { margin-top: -4px; }
 
@@ -114,14 +114,8 @@
 .otp-success h2 { font-size: var(--fs-2xl); margin-bottom: 6px; }
 .otp-success p { color: var(--text-2); }
 
-@media (max-width: 900px) {
-  .auth { grid-template-columns: minmax(0, 1fr); }
-  .auth-visual { display: none; }
-  .auth-logo-mobile { display: inline-flex; }
-  .auth-panel { padding-top: 16px; }
-  .auth-card { margin: 24px auto auto; padding-top: 16px; }
-}
-@media (max-width: 480px) {
-  .auth-heading h1 { font-size: var(--fs-2xl); }
+@media (max-width: 520px) {
+  .auth-panel { align-items: flex-start; padding: 8px 12px 40px; }
+  .auth-card { padding: 28px 20px 24px; border-radius: 20px; }
   .otp { gap: 6px; }
 }

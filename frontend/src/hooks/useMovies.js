@@ -61,7 +61,7 @@ export function useMovieById(id) {
     setLoading(true)
     setMovie(null)
     fetchWithAuth(`/api/movies/${id}`)
-      .then(res => { if (!res.ok) throw new Error('Film non trouvé'); return res.json() })
+      .then(res => { if (!res.ok) throw new Error('Movie not found'); return res.json() })
       .then(data => { setMovie(data); setLoading(false) })
       .catch(err => { setError(err.message); setLoading(false) })
   }, [id])
@@ -78,7 +78,7 @@ export function useMovieSessions(movieId) {
     if (!movieId) return
     setLoading(true)
     fetchWithAuth(`/api/movies/${movieId}/sessions`)
-      .then(res => { if (!res.ok) throw new Error('Sessions introuvables'); return res.json() })
+      .then(res => { if (!res.ok) throw new Error('Showtimes not found'); return res.json() })
       .then(data => { setSessions(Array.isArray(data) ? data : data.content ?? []); setLoading(false) })
       .catch(err => { setError(err.message); setLoading(false) })
   }, [movieId])
@@ -96,7 +96,7 @@ export function useSessionDetails(sessionId) {
     if (!sessionId) return
     setLoading(true)
     fetchWithAuth(`/api/sessions/${sessionId}`)
-      .then(res => { if (!res.ok) throw new Error('Session introuvable'); return res.json() })
+      .then(res => { if (!res.ok) throw new Error('Showtime not found'); return res.json() })
       .then(data => { setSession(data); setLoading(false) })
       .catch(err => {
         if (err.isAuthError) setAuthError(true)

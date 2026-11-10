@@ -1,4 +1,6 @@
-// Helpers partagés (formatage des dates, durées, prix, salles, images TMDB)
+// Shared helpers: dates, durations, prices, rooms, TMDB image URLs
+
+const LOCALE = 'en-GB'
 
 export const POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
 export const POSTER_SMALL = 'https://image.tmdb.org/t/p/w342'
@@ -7,51 +9,56 @@ export const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original'
 export const BACKDROP_MEDIUM = 'https://image.tmdb.org/t/p/w1280'
 
 export function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })
 }
 
+/** "Tuesday 20 October" */
 export function formatDateLong(iso) {
-  return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  return new Date(iso).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
+/** "Tuesday 20 October 2026" */
 export function formatDateFull(iso) {
-  return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+/** "20 October 2026" */
 export function formatReleaseDate(iso) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-/** Libellé court pour un onglet de date : « Aujourd'hui », « Demain », ou { weekday, day, month } */
+/** Parts for a date tab: relative label ("Today", "Tomorrow") or weekday, day, month */
 export function dayParts(iso) {
   const d = new Date(iso)
   const today = new Date()
   const tomorrow = new Date(today)
   tomorrow.setDate(today.getDate() + 1)
   const relative =
-    d.toDateString() === today.toDateString() ? "Aujourd'hui"
-    : d.toDateString() === tomorrow.toDateString() ? 'Demain'
+    d.toDateString() === today.toDateString() ? 'Today'
+    : d.toDateString() === tomorrow.toDateString() ? 'Tomorrow'
     : null
   return {
     relative,
-    weekday: d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', ''),
+    weekday: d.toLocaleDateString(LOCALE, { weekday: 'short' }),
     day: d.getDate(),
-    month: d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''),
+    month: d.toLocaleDateString(LOCALE, { month: 'short' }),
   }
 }
 
+/** 155 → "2h 35m" */
 export function formatRuntime(runtime) {
   if (!runtime) return null
   const h = Math.floor(runtime / 60)
   const m = runtime % 60
-  if (h === 0) return `${m} min`
-  return m > 0 ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`
+  if (h === 0) return `${m}m`
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
+/** 12.5 → "12.50 TND" */
 export function formatPrice(value) {
   const n = parseFloat(value)
   if (Number.isNaN(n)) return '—'
-  return `${n.toFixed(2).replace('.', ',')} TND`
+  return `${n.toFixed(2)} TND`
 }
 
 export function getYear(releaseDate) {

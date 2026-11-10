@@ -1,80 +1,77 @@
-.mcard {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
+.mcard { display: block; min-width: 0; }
 
 .mcard-poster {
   position: relative;
   aspect-ratio: 2 / 3;
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   overflow: hidden;
-  background: var(--surface);
+  background: var(--surface-2);
   box-shadow: 0 0 0 1px var(--line) inset;
+  transform: translateZ(0);
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
 }
 .mcard-poster img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s var(--ease), filter 0.3s;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.7s var(--ease), filter 0.5s var(--ease);
 }
 .mcard-poster::after {
   content: '';
   position: absolute; inset: 0;
-  border-radius: inherit;
-  box-shadow: 0 0 0 2px var(--accent) inset;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 45%);
   opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
 }
-@media (hover: hover) {
-  .mcard:hover .mcard-poster img { transform: scale(1.03); filter: brightness(1.08); }
-  .mcard:hover .mcard-poster::after { opacity: 1; }
-  .mcard:hover .mcard-title { color: var(--accent); }
-}
-.mcard:focus-visible { outline: none; }
-.mcard:focus-visible .mcard-poster::after { opacity: 1; }
-
 .mcard-fallback {
-  position: absolute; inset: 0;
+  width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
   color: var(--text-3);
-  background: linear-gradient(160deg, var(--surface-2), var(--surface));
 }
 
 .mcard-rating {
-  position: absolute;
-  top: 8px; left: 8px;
-  padding: 3px 7px;
-  border-radius: 6px;
+  position: absolute; top: 10px; left: 10px; z-index: 1;
+  height: 24px; padding: 0 8px;
+  border-radius: 999px;
   font-size: var(--fs-xs);
   color: var(--text);
-  background: rgba(15, 14, 13, 0.78);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(10, 10, 11, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.mcard-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mcard-cta {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--fs-sm); font-weight: 600;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.mcard-body { padding-top: 14px; }
 .mcard-title {
-  font-size: var(--fs-base);
-  font-weight: 650;
-  line-height: 1.25;
-  color: var(--text);
-  transition: color 0.18s;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .mcard-meta {
   display: flex; flex-wrap: wrap;
-  column-gap: 10px;
+  margin-top: 4px;
   font-size: var(--fs-sm);
   color: var(--text-3);
 }
+.mcard-meta span + span::before { content: '·'; margin: 0 6px; }
 
-@media (max-width: 640px) {
-  .mcard { gap: 10px; }
-  .mcard-title { font-size: var(--fs-md); }
-  .mcard-meta { font-size: var(--fs-xs); column-gap: 8px; }
+@media (hover: hover) {
+  .mcard:hover .mcard-poster { transform: translateY(-6px); box-shadow: 0 0 0 1px var(--line-strong) inset, 0 24px 48px rgba(0, 0, 0, 0.5); }
+  .mcard:hover .mcard-poster img { transform: scale(1.05); }
+  .mcard:hover .mcard-poster::after { opacity: 1; }
+  .mcard:hover .mcard-cta { opacity: 1; transform: none; }
 }
+.mcard:focus-visible { outline: none; }
+.mcard:focus-visible .mcard-poster { box-shadow: 0 0 0 2px var(--text); }

@@ -52,7 +52,7 @@ export default function CheckoutPage() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.message || 'La réservation a échoué. Vos places sont peut-être déjà prises, choisissez-en d\'autres.')
+        throw new Error(data.message || 'Booking failed. Your seats may have just been taken, please pick other seats.')
       }
       const data = await res.json().catch(() => ({}))
       navigate('/booking-confirmation', {
@@ -74,18 +74,23 @@ export default function CheckoutPage() {
   const fmt = getRoomFormat(session.room?.name)
 
   return (
-    <main className="page checkout">
+    <main className="page checkout page-anim">
       <div className="container checkout-container">
         <button type="button" className="back-link" onClick={() => navigate(-1)}>
           <Icon name="arrow-left" size={16} />
-          Modifier mes places
+          Change seats
         </button>
 
         <Steps current={2} />
 
+        <header className="checkout-head">
+          <h1>Payment</h1>
+          <p>Check your order, then enter your card details.</p>
+        </header>
+
         <div className="checkout-grid">
-          {/* Récapitulatif */}
-          <aside className="summary" aria-label="Récapitulatif de la commande">
+          {/* Order summary */}
+          <aside className="summary" aria-label="Order summary">
             <div className="summary-movie">
               {movie?.posterPath && (
                 <img src={`${POSTER_THUMB}${movie.posterPath}`} alt="" className="summary-poster" />
@@ -103,13 +108,13 @@ export default function CheckoutPage() {
 
             <dl className="summary-lines">
               <div>
-                <dt>Places</dt>
+                <dt>Seats</dt>
                 <dd className="summary-seats">
                   {selectedSeats.map(s => <span key={s.id} className="seat-pill">{s.row}{s.column}</span>)}
                 </dd>
               </div>
               <div>
-                <dt>Prix</dt>
+                <dt>Price</dt>
                 <dd className="num">{selectedSeats.length} × {formatPrice(session.price)}</dd>
               </div>
               <div className="summary-total">
@@ -121,11 +126,10 @@ export default function CheckoutPage() {
 
           {/* Paiement */}
           <form className="pay" onSubmit={handlePay} noValidate>
-            <h1 className="pay-title">Paiement</h1>
 
             <div className="alert alert-info">
               <Icon name="info" size={16} />
-              <p><strong>Mode démonstration.</strong> Saisissez n'importe quelles données : aucun paiement réel n'est effectué.</p>
+              <p><strong>Demo mode.</strong> Enter any details you like: no real payment is made.</p>
             </div>
 
             <div className="card-preview" aria-hidden="true">
@@ -136,24 +140,24 @@ export default function CheckoutPage() {
               <p className={`card-number num ${cardNumber ? '' : 'is-empty'}`}>{cardNumber || '•••• •••• •••• ••••'}</p>
               <div className="card-preview-bottom">
                 <div>
-                  <span>Titulaire</span>
-                  <p className={cardName ? '' : 'is-empty'}>{cardName || 'NOM PRÉNOM'}</p>
+                  <span>Cardholder</span>
+                  <p className={cardName ? '' : 'is-empty'}>{cardName || 'FULL NAME'}</p>
                 </div>
                 <div>
-                  <span>Expire</span>
-                  <p className={`num ${expiry ? '' : 'is-empty'}`}>{expiry || 'MM/AA'}</p>
+                  <span>Expires</span>
+                  <p className={`num ${expiry ? '' : 'is-empty'}`}>{expiry || 'MM/YY'}</p>
                 </div>
               </div>
             </div>
 
             <div className="pay-fields">
-              <CardField id="cc-number" label="Numéro de carte" placeholder="1234 5678 9012 3456" icon="credit-card"
+              <CardField id="cc-number" label="Card number" placeholder="1234 5678 9012 3456" icon="credit-card"
                 value={cardNumber} onChange={v => setCardNumber(formatCardNumber(v))}
                 inputMode="numeric" autoComplete="cc-number" />
-              <CardField id="cc-name" label="Nom du titulaire" placeholder="Nom tel qu'il figure sur la carte" icon="user"
+              <CardField id="cc-name" label="Name on card" placeholder="As shown on the card" icon="user"
                 value={cardName} onChange={v => setCardName(v.toUpperCase())} autoComplete="cc-name" />
               <div className="pay-row">
-                <CardField id="cc-exp" label="Expiration" placeholder="MM/AA" icon="calendar"
+                <CardField id="cc-exp" label="Expiry date" placeholder="MM/YY" icon="calendar"
                   value={expiry} onChange={v => setExpiry(formatExpiry(v))}
                   inputMode="numeric" autoComplete="cc-exp" />
                 <CardField id="cc-csc" label="CVV" placeholder="123" icon="lock"
@@ -171,14 +175,14 @@ export default function CheckoutPage() {
 
             <button type="submit" className="btn btn-primary btn-lg btn-block pay-cta" disabled={!isCardFilled || loading}>
               {loading
-                ? <><span className="spinner spinner-ink" />Paiement en cours…</>
-                : <><Icon name="lock" size={16} strokeWidth={2.2} />Payer {formatPrice(totalPrice)}</>
+                ? <><span className="spinner spinner-ink" />Processing payment…</>
+                : <><Icon name="lock" size={16} strokeWidth={2.2} />Pay {formatPrice(totalPrice)}</>
               }
             </button>
 
             <p className="pay-note">
               <Icon name="shield-check" size={14} />
-              Vos données de carte ne sont pas enregistrées.
+              Your card details are not stored.
             </p>
           </form>
         </div>

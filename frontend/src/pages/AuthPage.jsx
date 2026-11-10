@@ -18,7 +18,7 @@ function OtpScreen({ email, onSuccess, onBack }) {
   const [resendCount, setResendCount] = useState(0)
   const canResend = countdown <= 0
 
-  // Compte à rebours avant de pouvoir renvoyer le code
+  // Countdown before the code can be resent
   useEffect(() => {
     if (countdown <= 0) return
     const t = setTimeout(() => setCountdown(c => c - 1), 1000)
@@ -56,7 +56,7 @@ function OtpScreen({ email, onSuccess, onBack }) {
   async function handleVerify(e) {
     e?.preventDefault()
     const code = otp.join('')
-    if (code.length < 6) { setError('Saisissez les 6 chiffres du code.'); return }
+    if (code.length < 6) { setError('Enter all 6 digits of the code.'); return }
     setLoading(true)
     setError(null)
     try {
@@ -67,8 +67,8 @@ function OtpScreen({ email, onSuccess, onBack }) {
       })
       const data = await res.json()
       if (!res.ok) {
-        // Code faux : afficher l'erreur, puis reset après 1.5s
-        setError(data.message || 'Code incorrect. Vérifiez le dernier email reçu.')
+        // Wrong code: show the error, then reset after 1.5s
+        setError(data.message || 'Incorrect code. Check the latest email we sent you.')
         setLoading(false)
         setTimeout(() => {
           setError(null)
@@ -77,13 +77,13 @@ function OtpScreen({ email, onSuccess, onBack }) {
         }, 1500)
         return
       }
-      // Code bon : animation succès, puis redirection
+      // Correct code: success animation, then redirect
       setSuccess(true)
       setTimeout(() => {
         onSuccess(data.token, data.user)
       }, 1200)
     } catch {
-      setError('Le serveur ne répond pas. Réessayez dans un instant.')
+      setError('The server is not responding. Please try again in a moment.')
       setLoading(false)
     }
   }
@@ -107,7 +107,7 @@ function OtpScreen({ email, onSuccess, onBack }) {
   const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
   const filled = otp.every(d => d !== '')
 
-  // ── Écran succès ──
+  // ── Success screen ──
   if (success) return (
     <div className="otp-success">
       <div className="confirm-check" aria-hidden="true">
@@ -115,8 +115,8 @@ function OtpScreen({ email, onSuccess, onBack }) {
           <path d="M20 6 9 17l-5-5" pathLength="1" className="confirm-check-path" />
         </svg>
       </div>
-      <h2>Adresse vérifiée</h2>
-      <p>Connexion en cours…</p>
+      <h2>Email verified</h2>
+      <p>Signing you in…</p>
     </div>
   )
 
@@ -124,12 +124,12 @@ function OtpScreen({ email, onSuccess, onBack }) {
     <form className="auth-form" onSubmit={handleVerify}>
       <button type="button" className="back-link" onClick={onBack}>
         <Icon name="arrow-left" size={16} />
-        Modifier l'adresse email
+        Change email address
       </button>
 
       <div className="auth-heading">
-        <h1>Vérifiez votre email</h1>
-        <p>Saisissez le code à 6 chiffres envoyé à <strong>{maskedEmail}</strong>.</p>
+        <h1>Check your email</h1>
+        <p>Enter the 6-digit code we sent to <strong>{maskedEmail}</strong>.</p>
       </div>
 
       <div className={`otp ${error ? 'has-error' : ''}`} onPaste={handlePaste}>
@@ -142,7 +142,7 @@ function OtpScreen({ email, onSuccess, onBack }) {
             autoComplete={idx === 0 ? 'one-time-code' : 'off'}
             maxLength={1}
             value={digit}
-            aria-label={`Chiffre ${idx + 1}`}
+            aria-label={`Digit ${idx + 1}`}
             className={digit ? 'is-filled' : ''}
             onChange={e => handleOtpChange(idx, e.target.value)}
             onKeyDown={e => handleOtpKeyDown(idx, e)}
@@ -155,14 +155,14 @@ function OtpScreen({ email, onSuccess, onBack }) {
       )}
 
       <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loading || !filled}>
-        {loading ? <><span className="spinner spinner-ink" />Vérification…</> : 'Valider le code'}
+        {loading ? <><span className="spinner spinner-ink" />Verifying…</> : 'Verify code'}
       </button>
 
       <p className="auth-switch">
         {canResend ? (
-          <>Rien reçu ? <button type="button" className="btn-text" onClick={handleResend}>Renvoyer le code</button></>
+          <>Didn't get it? <button type="button" className="btn-text" onClick={handleResend}>Resend code</button></>
         ) : (
-          <>Vous pourrez renvoyer le code dans <strong className="num">{countdown} s</strong></>
+          <>You can resend the code in <strong className="num">{countdown} s</strong></>
         )}
       </p>
     </form>
@@ -188,7 +188,8 @@ export default function AuthPage() {
 
   const [form, setForm] = useState({ email: '', password: '', fullName: '', confirmPassword: '' })
 
-  const backdrop = movies.find(m => m.backdropPath)?.backdropPath
+  const featured = movies.find(m => m.backdropPath)
+  const backdrop = featured?.backdropPath
 
   function update(field, val) {
     setForm(f => ({ ...f, [field]: val }))
@@ -198,13 +199,13 @@ export default function AuthPage() {
 
   function validate() {
     const e = {}
-    if (!form.email) e.email = 'Saisissez votre adresse email.'
-    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Cette adresse email n\'est pas valide.'
-    if (!form.password) e.password = 'Saisissez votre mot de passe.'
-    else if (form.password.length < 6) e.password = 'Le mot de passe doit contenir au moins 6 caractères.'
+    if (!form.email) e.email = 'Enter your email address.'
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'This email address is not valid.'
+    if (!form.password) e.password = 'Enter your password.'
+    else if (form.password.length < 6) e.password = 'Your password must be at least 6 characters.'
     if (mode === 'register') {
-      if (!form.fullName) e.fullName = 'Saisissez votre nom.'
-      if (form.confirmPassword !== form.password) e.confirmPassword = 'Les deux mots de passe ne correspondent pas.'
+      if (!form.fullName) e.fullName = 'Enter your name.'
+      if (form.confirmPassword !== form.password) e.confirmPassword = 'The passwords do not match.'
     }
     setErrors(e)
     return Object.keys(e).length === 0
@@ -224,7 +225,7 @@ export default function AuthPage() {
           body: JSON.stringify({ fullName: form.fullName, email: form.email, password: form.password }),
         })
         const data = await res.json().catch(() => ({}))
-        if (!res.ok) { setApiError(data.message || "L'inscription a échoué. Réessayez."); return }
+        if (!res.ok) { setApiError(data.message || 'Sign-up failed. Please try again.'); return }
 
         if (!data.token) {
           setPendingEmail(form.email)
@@ -241,12 +242,12 @@ export default function AuthPage() {
           body: JSON.stringify({ email: form.email, password: form.password }),
         })
         const data = await res.json()
-        if (!res.ok) { setApiError(data.message || 'Email ou mot de passe incorrect.'); return }
+        if (!res.ok) { setApiError(data.message || 'Incorrect email or password.'); return }
         login(data.token, data.user)
         navigate(from, { replace: true })
       }
     } catch {
-      setApiError('Le serveur ne répond pas. Réessayez dans un instant.')
+      setApiError('The server is not responding. Please try again in a moment.')
     } finally {
       setLoading(false)
     }
@@ -267,37 +268,26 @@ export default function AuthPage() {
   }
 
   function handleClose() {
-    // Retour à la page précédente si elle existe dans l'app, sinon accueil
+    // Go back if there is an in-app previous page, otherwise home
     if (window.history.state?.idx > 0) navigate(-1)
     else navigate('/')
   }
 
   return (
     <div className="auth">
-      {/* Panneau visuel (desktop) */}
-      <aside className="auth-visual" aria-hidden="true">
-        {backdrop && (
-          <img src={`${TMDB}w1280${backdrop}`} alt="" className="auth-visual-img" />
-        )}
-        <div className="auth-visual-shade" />
-        <div className="auth-visual-content">
-          <Logo size={34} />
-          <div>
-            <p className="auth-visual-title display">Votre prochaine séance commence ici.</p>
-            <p className="auth-visual-text">Choisissez votre film, votre horaire et vos sièges. Votre billet arrive par email.</p>
-          </div>
-        </div>
-      </aside>
+      {/* Blurred movie backdrop */}
+      <div className="auth-bg" aria-hidden="true">
+        {backdrop && <img src={`${TMDB}w1280${backdrop}`} alt="" />}
+      </div>
 
-      {/* Formulaire */}
+      <header className="auth-topbar container">
+        <Logo size={28} />
+        <button type="button" className="icon-btn" onClick={handleClose} aria-label="Close">
+          <Icon name="x" size={20} />
+        </button>
+      </header>
+
       <main className="auth-panel">
-        <div className="auth-topbar">
-          <Logo size={30} className="auth-logo-mobile" />
-          <button type="button" className="icon-btn" onClick={handleClose} aria-label="Fermer">
-            <Icon name="x" size={18} />
-          </button>
-        </div>
-
         <div className="auth-card">
           {showOtp ? (
             <OtpScreen
@@ -308,7 +298,7 @@ export default function AuthPage() {
           ) : (
             <>
               <div className="auth-tabs" role="tablist">
-                {[['login', 'Connexion'], ['register', 'Inscription']].map(([m, label]) => (
+                {[['login', 'Sign in'], ['register', 'Sign up']].map(([m, label]) => (
                   <button key={m} type="button" role="tab" aria-selected={mode === m}
                     className={`auth-tab ${mode === m ? 'is-active' : ''}`} onClick={() => switchMode(m)}>
                     {label}
@@ -317,8 +307,8 @@ export default function AuthPage() {
               </div>
 
               <div className="auth-heading">
-                <h1>{mode === 'login' ? 'Bon retour parmi nous' : 'Créer votre compte'}</h1>
-                <p>{mode === 'login' ? 'Connectez-vous pour réserver et retrouver vos billets.' : 'Gratuit, et utile pour réserver vos places en quelques clics.'}</p>
+                <h1>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
+                <p>{mode === 'login' ? 'Sign in to book tickets and find your bookings.' : 'It\'s free and lets you book seats in a few clicks.'}</p>
               </div>
 
               {apiError && (
@@ -330,24 +320,24 @@ export default function AuthPage() {
 
               <form onSubmit={handleSubmit} className="auth-form" noValidate>
                 {mode === 'register' && (
-                  <Field id="fullName" label="Nom complet" icon="user" value={form.fullName} autoComplete="name"
-                    onChange={v => update('fullName', v)} placeholder="Prénom Nom" error={errors.fullName} />
+                  <Field id="fullName" label="Full name" icon="user" value={form.fullName} autoComplete="name"
+                    onChange={v => update('fullName', v)} placeholder="First and last name" error={errors.fullName} />
                 )}
-                <Field id="email" label="Adresse email" icon="mail" value={form.email} autoComplete="email"
-                  onChange={v => update('email', v)} placeholder="vous@exemple.com" type="email" error={errors.email} />
-                <Field id="password" label="Mot de passe" icon="lock" value={form.password}
+                <Field id="email" label="Email address" icon="mail" value={form.email} autoComplete="email"
+                  onChange={v => update('email', v)} placeholder="you@example.com" type="email" error={errors.email} />
+                <Field id="password" label="Password" icon="lock" value={form.password}
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  onChange={v => update('password', v)} placeholder={mode === 'register' ? '6 caractères minimum' : ''}
+                  onChange={v => update('password', v)} placeholder={mode === 'register' ? 'At least 6 characters' : ''}
                   type={showPass ? 'text' : 'password'} error={errors.password}
                   suffix={
                     <button type="button" className="field-suffix" onClick={() => setShowPass(s => !s)}
-                      aria-label={showPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                      aria-label={showPass ? 'Hide password' : 'Show password'}>
                       <Icon name={showPass ? 'eye-off' : 'eye'} size={18} />
                     </button>
                   }
                 />
                 {mode === 'register' && (
-                  <Field id="confirmPassword" label="Confirmer le mot de passe" icon="lock" value={form.confirmPassword}
+                  <Field id="confirmPassword" label="Confirm password" icon="lock" value={form.confirmPassword}
                     autoComplete="new-password"
                     onChange={v => update('confirmPassword', v)}
                     type="password" error={errors.confirmPassword} />
@@ -355,15 +345,15 @@ export default function AuthPage() {
 
                 <button type="submit" className="btn btn-primary btn-lg btn-block auth-submit" disabled={loading}>
                   {loading
-                    ? <><span className="spinner spinner-ink" />{mode === 'login' ? 'Connexion…' : 'Création du compte…'}</>
-                    : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+                    ? <><span className="spinner spinner-ink" />{mode === 'login' ? 'Signing in…' : 'Creating account…'}</>
+                    : mode === 'login' ? 'Sign in' : 'Create account'}
                 </button>
               </form>
 
               <p className="auth-switch">
-                {mode === 'login' ? 'Pas encore de compte ? ' : 'Déjà inscrit ? '}
+                {mode === 'login' ? 'New to CinéBook? ' : 'Already have an account? '}
                 <button type="button" className="btn-text" onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
-                  {mode === 'login' ? 'Créer un compte' : 'Se connecter'}
+                  {mode === 'login' ? 'Create an account' : 'Sign in'}
                 </button>
               </p>
             </>

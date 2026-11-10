@@ -32,12 +32,12 @@ export default function SeancesPage() {
     async function fetchSessions() {
       try {
         const res = await fetch(`/api/sessions/movies`)
-        if (!res.ok) throw new Error('Erreur serveur')
+        if (!res.ok) throw new Error('Server error')
         const data = await res.json()
         const list = Array.isArray(data) ? data : []
         setSessions(list)
       } catch (e) {
-        setError('Impossible de charger les séances.')
+        setError('Showtimes could not be loaded')
       } finally {
         setLoading(false)
       }
@@ -57,11 +57,12 @@ export default function SeancesPage() {
 
   return (
     <>
-      <main className="page seances">
-        <div className="container">
+      <main className="page seances page-anim">
+        <div className="container container-narrow">
           <header className="page-head">
-            <h1 className="display">Séances</h1>
-            <p>Choisissez un jour, puis l'horaire qui vous convient.</p>
+            <p className="eyebrow">This week</p>
+            <h1>Showtimes</h1>
+            <p>Pick a day, then the time that suits you.</p>
           </header>
 
           {loading && (
@@ -86,23 +87,23 @@ export default function SeancesPage() {
             <div className="state">
               <div className="state-icon"><Icon name="wifi-off" size={24} /></div>
               <h2>{error}</h2>
-              <p>Vérifiez votre connexion puis rechargez la page.</p>
-              <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Recharger la page</button>
+              <p>Check your connection and reload the page.</p>
+              <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Reload</button>
             </div>
           )}
 
           {!loading && !error && sessions.length === 0 && (
             <div className="state">
               <div className="state-icon"><Icon name="calendar" size={24} /></div>
-              <h2>Aucune séance programmée</h2>
-              <p>Le programme de la semaine n'est pas encore disponible. En attendant, parcourez les films à l'affiche.</p>
-              <Link to="/" className="btn btn-primary">Voir les films</Link>
+              <h2>No showtimes scheduled</h2>
+              <p>This week's schedule is not available yet. In the meantime, browse the movies now showing.</p>
+              <Link to="/" className="btn btn-primary">Browse movies</Link>
             </div>
           )}
 
           {!loading && activeDay && (
             <>
-              <div className="seances-dates scroll-x" role="tablist" aria-label="Jour">
+              <div className="seances-dates scroll-x" role="tablist" aria-label="Day">
                 {grouped.map(g => {
                   const p = dayParts(g.date)
                   const active = g === activeDay
@@ -120,13 +121,13 @@ export default function SeancesPage() {
               <p className="seances-day">
                 <span className="seances-day-date">{formatDateFull(activeDay.date)}</span>
                 <span className="dim">
-                  {movieGroups.length} film{movieGroups.length > 1 ? 's' : ''}, {activeDay.sessions.length} séance{activeDay.sessions.length > 1 ? 's' : ''}
+                  {movieGroups.length} movie{movieGroups.length > 1 ? 's' : ''}, {activeDay.sessions.length} showtime{activeDay.sessions.length > 1 ? 's' : ''}
                 </span>
               </p>
 
-              <div className="seances-list">
-                {movieGroups.map(({ movie, sessions: ms }) => (
-                  <article key={movie?.id ?? 'unknown'} className="seance-row">
+              <div className="seances-list" key={activeDay.key}>
+                {movieGroups.map(({ movie, sessions: ms }, i) => (
+                  <article key={movie?.id ?? 'unknown'} className="seance-row" style={{ '--i': i }}>
                     <Link to={movie?.id ? `/movies/${movie.id}` : '#'} className="seance-poster" aria-label={movie?.title}>
                       {movie?.posterPath ? (
                         <img src={`${POSTER_SMALL}${movie.posterPath}`} alt="" loading="lazy" />

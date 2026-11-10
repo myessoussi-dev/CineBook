@@ -1,19 +1,25 @@
-.footer { border-top: 1px solid var(--line); margin-top: 40px; }
-.footer-inner {
+.footer { border-top: 1px solid var(--line); background: var(--bg); }
+
+.footer-top {
   display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
   gap: 32px;
-  padding-top: 40px; padding-bottom: 32px;
+  padding: 40px 0 36px;
 }
-.footer-brand p { margin-top: 12px; color: var(--text-3); font-size: var(--fs-sm); max-width: 36ch; }
-.footer-links { display: flex; gap: 28px; font-size: var(--fs-md); color: var(--text-2); }
-.footer-links a:hover { color: var(--text); }
-.footer-legal {
+.footer-brand .logo-word { font-size: var(--fs-md); letter-spacing: -0.02em; }
+.footer-brand .logo { gap: 10px; }
+.footer-brand p { margin-top: 14px; font-size: var(--fs-md); line-height: 1.7; color: var(--text-2); }
+
+.footer-col { display: flex; flex-direction: column; gap: 10px; min-width: 120px; }
+.footer-col-title { font-size: var(--fs-md); font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.footer-col a { font-size: var(--fs-md); color: var(--text-2); width: fit-content; transition: color 0.2s; }
+.footer-col a:hover { color: var(--text); }
+
+.footer-bottom {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
-  padding-top: 20px;
-  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  padding: 20px 0 calc(24px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   color: var(--text-3);
 }
-.footer-legal a { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
-.footer-legal a:hover { color: var(--text); }
+.footer-bottom a { color: var(--text-2); transition: color 0.2s; }
+.footer-bottom a:hover { color: var(--text); }

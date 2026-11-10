@@ -8,10 +8,12 @@ import SeancesPage from './pages/SeancesPage'
 import CheckoutPage from './pages/CheckoutPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
 
-// Remonte en haut de page à chaque changement de route
+// Scroll to top on every route change (except anchor links)
 function ScrollToTop() {
-  const { pathname } = useLocation()
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [pathname])
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (!hash) window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname, hash])
   return null
 }
 
@@ -27,6 +29,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage />} />
+        <Route path="/showtimes" element={<SeancesPage />} />
         <Route path="/seances" element={<SeancesPage />} />
         <Route path="/movies/:id/sessions/:sessionId/seats" element={<SeatSelection />} />
         <Route path="/checkout" element={<CheckoutPage />} />

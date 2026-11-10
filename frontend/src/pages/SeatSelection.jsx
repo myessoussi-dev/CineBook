@@ -4,6 +4,7 @@ import { useSessionSeats, useSessionDetails } from '../hooks/useMovies'
 import { useAuth } from '../context/AuthContext'
 import LoginPromptModal from '../components/LoginPromptModal'
 import Icon from '../components/Icon'
+import Steps from '../components/Steps'
 import { POSTER_THUMB, formatTime, formatDateLong, formatPrice, getRoomFormat } from '../utils/format'
 import './SeatSelection.css'
 
@@ -45,7 +46,7 @@ export default function SeatSelection() {
       }))
   }, [seats])
 
-  // Nombre de colonnes de la salle (positionne chaque siège selon son numéro → les allées restent visibles)
+  // Number of columns in the room (each seat is placed by its number, so aisles stay visible)
   const { maxCol, numeric } = useMemo(() => {
     const cols = seats.map(s => Number(s.column))
     const ok = cols.length > 0 && cols.every(c => Number.isInteger(c) && c > 0)
@@ -84,11 +85,11 @@ export default function SeatSelection() {
   const count = selectedSeats.length
 
   return (
-    <div className="seat-page">
-      {/* En-tête */}
+    <div className="seat-page page-anim">
+      {/* Header */}
       <header className="seat-head">
         <div className="container seat-head-inner">
-          <button type="button" className="icon-btn" onClick={() => navigate(-1)} aria-label="Retour">
+          <button type="button" className="icon-btn" onClick={() => navigate(-1)} aria-label="Back">
             <Icon name="arrow-left" size={18} />
           </button>
 
@@ -97,7 +98,7 @@ export default function SeatSelection() {
           )}
 
           <div className="seat-head-text">
-            <h1 className="seat-head-title">{movie?.title || 'Choix des places'}</h1>
+            <h1 className="seat-head-title">{movie?.title || 'Choose your seats'}</h1>
             {session && (
               <p className="seat-head-meta">
                 <span className="seat-head-date">{formatDateLong(session.startTime)}, {formatTime(session.startTime)}</span>
@@ -107,12 +108,7 @@ export default function SeatSelection() {
             )}
           </div>
 
-          {session && (
-            <div className="seat-head-price">
-              <span className="dim">Prix par place</span>
-              <strong className="num">{formatPrice(session.price)}</strong>
-            </div>
-          )}
+          <div className="seat-head-steps"><Steps current={1} /></div>
         </div>
       </header>
 
@@ -120,34 +116,35 @@ export default function SeatSelection() {
         {loading ? (
           <div className="state">
             <div className="spinner spinner-lg" />
-            <p>Chargement du plan de salle…</p>
+            <p>Loading seating plan…</p>
           </div>
         ) : seatsByRow.length === 0 ? (
           <div className="state">
             <div className="state-icon"><Icon name="armchair" size={24} /></div>
-            <h2>Plan de salle indisponible</h2>
-            <p>Les sièges de cette séance n'ont pas pu être chargés. Revenez en arrière et choisissez une autre séance.</p>
-            <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>Retour aux séances</button>
+            <h2>Seating plan unavailable</h2>
+            <p>The seats for this showtime could not be loaded. Go back and pick another showtime.</p>
+            <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>Back to showtimes</button>
           </div>
         ) : (
-          <>
+          <div className="seat-layout">
+            <section className="seat-map-tile" aria-label="Seating plan">
             <div className="seat-scroll">
               <div className="seat-map" style={{ '--cols': maxCol }}>
                 <div className="screen" aria-hidden="true">
                   <svg viewBox="0 0 400 40" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="screenGlow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0" stopColor="var(--accent)" stopOpacity="0.35" />
-                        <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
+                        <stop offset="0" stopColor="#ffffff" stopOpacity="0.16" />
+                        <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
                       </linearGradient>
                     </defs>
                     <path d="M4 30 Q200 -4 396 30 L396 40 L4 40 Z" fill="url(#screenGlow)" />
-                    <path d="M4 30 Q200 -4 396 30" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                    <path d="M4 30 Q200 -4 396 30" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
                   </svg>
-                  <span>Écran</span>
+                  <span>Screen</span>
                 </div>
 
-                <div className="seat-rows" role="group" aria-label="Plan de salle">
+                <div className="seat-rows" role="group" aria-label="Seating plan">
                   {seatsByRow.map(({ row, seats: rowSeats }) => (
                     <div key={row} className="seat-row">
                       <span className="row-label" style={{ gridColumn: 1 }}>{row}</span>
@@ -163,8 +160,8 @@ export default function SeatSelection() {
                             onClick={() => toggleSeat(seat)}
                             disabled={isReserved}
                             aria-pressed={isSelected}
-                            aria-label={`Rangée ${seat.row}, siège ${seat.column}${isReserved ? ', déjà réservé' : ''}`}
-                            title={`${seat.row}${seat.column}${isReserved ? ' (réservé)' : ''}`}
+                            aria-label={`Row ${seat.row}, seat ${seat.column}${isReserved ? ', taken' : ''}`}
+                            title={`${seat.row}${seat.column}${isReserved ? ' (taken)' : ''}`}
                           >
                             <span className="seat-num">{seat.column}</span>
                           </button>
@@ -177,27 +174,29 @@ export default function SeatSelection() {
               </div>
             </div>
 
-            <ul className="seat-legend" aria-label="Légende">
-              <li><span className="seat seat-demo" />Disponible</li>
-              <li><span className="seat seat-demo is-selected" />Votre sélection</li>
-              <li><span className="seat seat-demo is-reserved" />Réservé</li>
+            <ul className="seat-legend" aria-label="Legend">
+              <li><span className="seat seat-demo" />Available</li>
+              <li><span className="seat seat-demo is-selected" />Selected</li>
+              <li><span className="seat seat-demo is-reserved" />Taken</li>
             </ul>
-          </>
+            </section>
+
+          </div>
         )}
       </main>
 
-      {/* Barre récapitulative */}
+      {/* Summary bar */}
       <div className="seat-bar">
         <div className="container seat-bar-inner">
           <div className="seat-bar-selection">
             <p className="seat-bar-label">
-              {count === 0 ? 'Aucune place sélectionnée' : `${count} place${count > 1 ? 's' : ''}`}
+              {count === 0 ? 'Tap a seat on the plan to select it' : `${count} seat${count > 1 ? 's' : ''} selected`}
             </p>
             {count > 0 && (
               <div className="seat-bar-pills scroll-x">
                 {selectedSeats.map(s => (
                   <button key={s.id} type="button" className="seat-pill seat-pill-btn" onClick={() => toggleSeat(s)}
-                    aria-label={`Retirer le siège ${s.row}${s.column}`}>
+                    aria-label={`Remove seat ${s.row}${s.column}`}>
                     {s.row}{s.column}
                     <Icon name="x" size={12} strokeWidth={2.4} />
                   </button>
@@ -207,12 +206,12 @@ export default function SeatSelection() {
           </div>
 
           <div className="seat-bar-total">
-            <span className="dim">Total</span>
+            <span className="dim">{count > 0 ? `${count} × ${formatPrice(session?.price)}` : 'Total'}</span>
             <strong className="num">{formatPrice(totalPrice)}</strong>
           </div>
 
           <button type="button" className="btn btn-primary btn-lg seat-bar-cta" onClick={goToCheckout} disabled={count === 0}>
-            Continuer vers le paiement
+            Continue to payment
           </button>
         </div>
       </div>

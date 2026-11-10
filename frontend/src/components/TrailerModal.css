@@ -1,0 +1,33 @@
+.trailer-backdrop {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fade 0.2s ease;
+}
+.trailer {
+  width: min(1100px, 100%);
+  animation: pop 0.25s var(--ease);
+}
+.trailer-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.trailer-title { display: flex; align-items: baseline; gap: 10px; font-size: var(--fs-xl); font-weight: 700; letter-spacing: -0.03em; min-width: 0; }
+.trailer-title span { font-size: var(--fs-sm); font-weight: 500; letter-spacing: 0; color: var(--text-3); }
+.trailer-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 140px);
+  margin-inline: auto;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: #000;
+  box-shadow: var(--shadow-lg);
+}
+.trailer-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+@media (max-width: 640px) {
+  .trailer-backdrop { padding: 12px; }
+  .trailer-frame { border-radius: var(--r-lg); }
+  .trailer-title { font-size: var(--fs-lg); }
+}

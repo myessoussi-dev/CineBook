@@ -1,12 +1,12 @@
 import Icon from './Icon'
 import './Steps.css'
 
-const STEPS = ['Places', 'Paiement', 'Confirmation']
+const STEPS = ['Seats', 'Payment', 'Confirmation']
 
-/** Indicateur d'étapes du parcours de réservation. current : 1, 2 ou 3 */
+/** Booking progress indicator. current: 1, 2 or 3 */
 export default function Steps({ current }) {
   return (
-    <ol className="steps" aria-label="Étapes de la réservation">
+    <ol className="steps" aria-label="Booking steps">
       {STEPS.map((label, i) => {
         const n = i + 1
         const state = n < current ? 'done' : n === current ? 'current' : 'todo'

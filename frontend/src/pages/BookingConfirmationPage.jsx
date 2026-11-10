@@ -32,7 +32,7 @@ export default function BookingConfirmationPage() {
   const firstName = user?.fullName?.split(' ')[0]
 
   return (
-    <main className="page confirm">
+    <main className="page confirm page-anim">
       <div className="container confirm-container">
         <Steps current={3} />
 
@@ -42,15 +42,20 @@ export default function BookingConfirmationPage() {
               <path d="M20 6 9 17l-5-5" pathLength="1" className="confirm-check-path" />
             </svg>
           </div>
-          <h1 className="confirm-title display">C'est réservé{firstName ? `, ${firstName}` : ''} !</h1>
+          <h1 className="confirm-title display">You're all set{firstName ? `, ${firstName}` : ''}!</h1>
           <p className="confirm-sub">
-            Un email de confirmation a été envoyé à <strong>{maskEmail(user?.email)}</strong>.
-            Présentez la référence ci-dessous à l'entrée de la salle.
+            A confirmation email has been sent to <strong>{maskEmail(user?.email)}</strong>.
+            Show the booking reference below at the cinema entrance.
           </p>
         </header>
 
-        <article className="ticket" aria-label="Votre billet">
+        <article className="ticket" aria-label="Your ticket">
           <div className="ticket-top">
+            {movie?.backdropPath && (
+              <div className="ticket-bg" aria-hidden="true">
+                <img src={`https://image.tmdb.org/t/p/w780${movie.backdropPath}`} alt="" />
+              </div>
+            )}
             {movie?.posterPath && (
               <img src={`${POSTER_SMALL}${movie.posterPath}`} alt="" className="ticket-poster" />
             )}
@@ -69,23 +74,23 @@ export default function BookingConfirmationPage() {
           <div className="ticket-bottom">
             <dl className="ticket-grid">
               <div>
-                <dt>Places</dt>
+                <dt>Seats</dt>
                 <dd className="ticket-seats">
                   {selectedSeats.map(s => <span key={s.id} className="seat-pill">{s.row}{s.column}</span>)}
                 </dd>
               </div>
               <div>
-                <dt>Billets</dt>
+                <dt>Tickets</dt>
                 <dd>{selectedSeats.length}</dd>
               </div>
               <div>
-                <dt>Total payé</dt>
+                <dt>Total paid</dt>
                 <dd className="num">{formatPrice(totalPrice)}</dd>
               </div>
             </dl>
 
             <div className="ticket-ref">
-              <span>Référence de réservation</span>
+              <span>Booking reference</span>
               <strong className="num">{bookingRef}</strong>
             </div>
           </div>
@@ -93,10 +98,10 @@ export default function BookingConfirmationPage() {
 
         <div className="confirm-actions">
           <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate('/')}>
-            Retour à l'accueil
+            Back to home
           </button>
-          <button type="button" className="btn btn-ghost btn-lg" onClick={() => navigate('/seances')}>
-            Voir d'autres séances
+          <button type="button" className="btn btn-ghost btn-lg" onClick={() => navigate('/showtimes')}>
+            See more showtimes
           </button>
         </div>
       </div>

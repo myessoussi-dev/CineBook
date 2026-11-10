@@ -1,5 +1,5 @@
-// Jeu d'icônes inline (tracés issus de Lucide — licence ISC).
-// Aucune dépendance : <Icon name="ticket" size={18} />
+// Inline icon set (paths from Lucide, ISC licence).
+// No dependency: <Icon name="ticket" size={18} />
 
 const PATHS = {
   menu: <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>,

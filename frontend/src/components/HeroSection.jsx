@@ -1,43 +1,37 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
-import { POSTER_THUMB, formatRuntime, getYear } from '../utils/format'
+import TrailerModal from './TrailerModal'
+import { formatRuntime, getYear } from '../utils/format'
 import './Hero.css'
 
-const SLIDE_MS = 7000
+const SLIDE_MS = 8000
 const TMDB = 'https://image.tmdb.org/t/p/'
 
-function backdropSet(path) {
-  return {
-    src: `${TMDB}w1280${path}`,
-    srcSet: `${TMDB}w780${path} 780w, ${TMDB}w1280${path} 1280w, ${TMDB}original${path} 1920w`,
-  }
-}
-
+/** Full-width featured movie with a slow crossfade between the most popular titles */
 export default function HeroSection({ movies }) {
   const [activeIdx, setActiveIdx] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [trailer, setTrailer] = useState(null)
   const touchX = useRef(null)
   const navigate = useNavigate()
 
   const featured = movies?.slice(0, 5) || []
   const current = featured[activeIdx]
+  const n = featured.length
 
-  // Défilement auto ; la pause (survol souris) conserve le temps restant
+  // Autoplay; hovering with a mouse pauses it and keeps the remaining time
   const remaining = useRef(SLIDE_MS)
   const lastIdx = useRef(activeIdx)
   useEffect(() => {
     if (lastIdx.current !== activeIdx) { remaining.current = SLIDE_MS; lastIdx.current = activeIdx }
-    if (featured.length < 2 || paused) return
+    if (n < 2 || paused || trailer) return
     const start = Date.now()
-    const t = setTimeout(() => setActiveIdx(i => (i + 1) % featured.length), remaining.current)
+    const t = setTimeout(() => setActiveIdx(i => (i + 1) % n), remaining.current)
     return () => { clearTimeout(t); remaining.current = Math.max(0, remaining.current - (Date.now() - start)) }
-  }, [activeIdx, featured.length, paused])
+  }, [activeIdx, n, paused, trailer])
 
-  function go(delta) {
-    setActiveIdx(i => (i + delta + featured.length) % featured.length)
-  }
-
+  function go(delta) { setActiveIdx(i => (i + delta + n) % n) }
   function onTouchStart(e) { touchX.current = e.touches[0].clientX }
   function onTouchEnd(e) {
     if (touchX.current == null) return
@@ -48,103 +42,85 @@ export default function HeroSection({ movies }) {
 
   if (!current) return null
 
-  const year = getYear(current.releaseDate)
-  const runtime = formatRuntime(current.runtime)
-  const genres = current.categories?.slice(0, 3).map(c => c.name) || []
+  const meta = [
+    getYear(current.releaseDate),
+    formatRuntime(current.runtime),
+    current.categories?.slice(0, 2).map(c => c.name).join(', '),
+  ].filter(Boolean)
 
   return (
     <section
       className="hero"
-      aria-roledescription="carrousel"
-      aria-label="Films à l'affiche"
+      aria-roledescription="carousel"
+      aria-label="Featured movies"
       onPointerEnter={e => { if (e.pointerType === 'mouse') setPaused(true) }}
       onPointerLeave={e => { if (e.pointerType === 'mouse') setPaused(false) }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Backdrops (fondu enchaîné) */}
       <div className="hero-media" aria-hidden="true">
-        {featured.map((m, i) => (
-          m.backdropPath && (
-            <img
-              key={m.id}
-              {...backdropSet(m.backdropPath)}
-              sizes="100vw"
-              alt=""
-              className={`hero-img ${i === activeIdx ? 'is-active' : ''}`}
-              fetchpriority={i === 0 ? 'high' : 'low'}
-            />
+        {featured.map((m, i) => {
+          // Only the visible slide, the previous one (fading out) and the next one (preloaded)
+          const near = i === activeIdx || i === (activeIdx + 1) % n || i === (activeIdx - 1 + n) % n
+          if (!near || !(m.backdropPath || m.posterPath)) return null
+          return (
+            <picture key={m.id} className={`hero-slide ${i === activeIdx ? 'is-active' : ''}`}>
+              {m.posterPath && <source media="(max-width: 640px)" srcSet={`${TMDB}w780${m.posterPath}`} />}
+              <img
+                src={`${TMDB}w1280${m.backdropPath || m.posterPath}`}
+                alt=""
+                fetchpriority={i === activeIdx ? 'high' : 'low'}
+              />
+            </picture>
           )
-        ))}
+        })}
         <div className="hero-shade" />
       </div>
 
-      {/* Contenu */}
       <div className="hero-inner container">
         <div className="hero-content" key={current.id}>
-          <p className="hero-kicker">
-            <span className="hero-live" />À l'affiche cette semaine
-          </p>
-
+          <p className="eyebrow hero-eyebrow">Now in cinemas</p>
           <h1 className="hero-title display">{current.title}</h1>
-
-          <div className="hero-meta">
+          <p className="hero-meta">
             {current.voteAverage > 0 && (
-              <span className="rating"><Icon name="star" size={15} />{current.voteAverage.toFixed(1)}</span>
+              <span className="rating"><Icon name="star" size={14} />{current.voteAverage.toFixed(1)}</span>
             )}
-            {year && <span>{year}</span>}
-            {runtime && <span>{runtime}</span>}
-            {genres.length > 0 && <span className="hero-genres">{genres.join(', ')}</span>}
-          </div>
-
+            {meta.map(item => <span key={item}>{item}</span>)}
+          </p>
           {current.overview && <p className="hero-overview">{current.overview}</p>}
-
           <div className="hero-actions">
             <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate(`/movies/${current.id}`)}>
               <Icon name="ticket" size={18} />
-              Réserver une place
+              Get tickets
             </button>
             {current.videoKey ? (
-              <a className="btn btn-secondary btn-lg" href={`https://www.youtube.com/watch?v=${current.videoKey}`}
-                target="_blank" rel="noopener noreferrer">
-                <Icon name="play" size={16} />
-                Bande-annonce
-              </a>
+              <button type="button" className="btn btn-secondary btn-lg" onClick={() => setTrailer(current)}>
+                <Icon name="play" size={15} />
+                Trailer
+              </button>
             ) : (
               <button type="button" className="btn btn-secondary btn-lg" onClick={() => navigate(`/movies/${current.id}`)}>
-                Voir le film
+                More info
               </button>
             )}
           </div>
         </div>
 
-        {/* Sélecteur + progression */}
-        {featured.length > 1 && (
-          <div className="hero-rail" role="tablist" aria-label="Choisir un film">
+        {n > 1 && (
+          <div className="hero-progress" role="tablist" aria-label="Featured movie">
             {featured.map((m, i) => (
-              <button
-                key={m.id}
-                type="button"
-                role="tab"
-                aria-selected={i === activeIdx}
-                aria-label={m.title}
-                className={`hero-thumb ${i === activeIdx ? 'is-active' : ''}`}
-                onClick={() => setActiveIdx(i)}
-              >
-                <span className="hero-thumb-img">
-                  {m.posterPath && <img src={`${POSTER_THUMB}${m.posterPath}`} alt="" loading="lazy" />}
-                </span>
-                <span className="hero-bar">
-                  <span
-                    className="hero-bar-fill"
-                    style={i === activeIdx ? { animationDuration: `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' } : undefined}
-                  />
-                </span>
+              <button key={m.id} type="button" role="tab" aria-selected={i === activeIdx} aria-label={m.title}
+                className={`hero-bar ${i === activeIdx ? 'is-active' : ''} ${i < activeIdx ? 'is-done' : ''}`}
+                onClick={() => setActiveIdx(i)}>
+                <span className="hero-bar-fill"
+                  style={i === activeIdx ? { animationDuration: `${SLIDE_MS}ms`, animationPlayState: paused || trailer ? 'paused' : 'running' } : undefined} />
               </button>
             ))}
           </div>
         )}
       </div>
+
+      {trailer && <TrailerModal videoKey={trailer.videoKey} title={trailer.title} onClose={() => setTrailer(null)} />}
     </section>
   )
 }
