@@ -1,38 +1,25 @@
 services:
   backend:
-    build:
-      context: ./backend
-    container_name: cinebook_backend
+    build: ./backend
     image: youssefess/cinebook-backend:latest
-    env_file:
-      - .env
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cinebook_db
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_MAIL_PORT=2525
+    env_file: .env
     depends_on:
       redis:
         condition: service_started
       db:
         condition: service_healthy
   db:
-    image: postgres:17-alpine
-    container_name: cinebook_db
+    image: postgres:18-alpine
     volumes:
-      - cinebook_db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=${SPRING_DATASOURCE_USERNAME}
-      - POSTGRES_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - POSTGRES_DB=cinebook_db
+      - cinebook_db:/var/lib/postgresql
+    env_file: .env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cinebook_user -d cinebook_db"]
       interval: 5s
       timeout: 5s
       retries: 5
   redis:
-    image: redis:8.2-alpine
-    container_name: cinebook_cache
+    image: redis:8.10-alpine
     healthcheck:
       test: ["CMD","redis-cli","ping"]
       interval: 1m30s
@@ -41,15 +28,17 @@ services:
       start_period: 30s
   nginx:
     build:
-      context: . #Docker interdit de copier un fichier qui se trouve en dehors du build context.
+      context: . 
       dockerfile: frontend/Dockerfile.prod
     image: youssefess/cinebook-nginx:latest
-    container_name: nginx
     ports:
       - "80:80"
     depends_on:
       - backend
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
 volumes:
   cinebook_db:
-    external: true
 
